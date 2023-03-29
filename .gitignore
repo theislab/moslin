@@ -131,6 +131,7 @@ dmypy.json
 # patterns to prevent data and figures from being uploaded
 *.csv
 *.pickle
+*.pkl
 *.h5ad
 *.loom
 *.pdf
@@ -147,3 +148,9 @@ dmypy.json
 
 # R stuff
 *.Rhistory
+*.xml
+*.gz
+*.p
+
+# editor
+.idea
