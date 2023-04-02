@@ -27,7 +27,7 @@ and write figures to `figures <figures/>`_.
 Results
 -------
 
-.. csv-table:: Application examples
+.. csv-table:: 
    :header: "Application", "Folder path"
 
     Fig. 2 (Simulations), `analysis/simulations/ <analysis/simulations/>`__
