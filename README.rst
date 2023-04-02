@@ -31,7 +31,7 @@ Results
    :header: "Application", "Folder path"
 
     Simulated data (Fig. 2), `analysis/simulations/ <analysis/simulations/>`__
-    C. elegans embryogenesis (Fig. 3), `analysis/packer_c_elegans/ <analysis/packer_c_elegans/>`__
+    C elegans (Fig. 3), `analysis/packer_c_elegans/ <analysis/packer_c_elegans/>`__
     Zebrafish heart regeneration (Fig. 4), `analysis/hu_zebrafish_linnaeus/ <analysis/hu_zebrafish_linnaeus/>`__
 
 
