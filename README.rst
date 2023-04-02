@@ -7,7 +7,7 @@ Manuscript, code, tutorial and data
 The moslin manuscript is available as a preprint at `bioRxiv`_. Under the hood,
 moslin is based on `moscot`_ to solve the optimal transport problem of mapping
 lineage-traced cells across time points. Specifically, we implement moslin via the
-`LineageClass`_ , and we demonstrate a use case in our `tutorial`_.  
+`LineageClass`_ , and we demonstrate a use case in our `tutorial`_.
 
 Raw published data is available from the Gene Expression Omnibus (GEO) under accession codes:
 
@@ -15,28 +15,29 @@ Raw published data is available from the Gene Expression Omnibus (GEO) under acc
 - `zebrafish`_: `GSE159032  <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE159032>`_.
 
 Additionally, we simulated data using `LineageOT`_ and `TedSim`_. Processed data
- is available on `figshare`_. To ease reproducibility, our data examples can
- also be accessed through moscot's `dataset interface <https://moscot.readthedocs.io/en/latest/user.html#module-moscot.datasets>`_.
+is available on `figshare`_. To ease reproducibility, our data examples can
+also be accessed through moscot's `dataset interface <https://moscot.readthedocs.io/en/latest/user.html#module-moscot.datasets>`_.
 
 Navigating this repository
 --------------------------
 We've organized this repository along the categories below. Each folder contains
-notebooks and scripts necessary to reproduce the results. We read data from `data`
-and write figures to `figures`. 
+notebooks and scripts necessary to reproduce the results. We read data from `data <data/>`_
+and write figures to `figures <figures/>`_.
 
 Results
 -------
 
-.. csv-table:: Main Figures
-   :header: "Figure", "Folder path"
+.. csv-table:: Application examples
+   :header: "Application", "Folder path"
 
-    Fig. 2 (Simulations), `path <analysis/simulations/>`__
-    Fig. 3 (C. elegans), `path <analysis/packer_c_elegans/>`__
-    Fig. 4 (Zebrafish), `path <analysis/hu_zebrafish_linnaeus/>`__
+    Fig. 2 (Simulations), `analysis/simulations/ <analysis/simulations/>`__
+    Fig. 3 (C. elegans), `analysis/packer_c_elegans/ <analysis/packer_c_elegans/>`__
+    Fig. 4 (Zebrafish), `analysis/hu_zebrafish_linnaeus/ <analysis/hu_zebrafish_linnaeus/>`__
 
 
 .. _bioRxiv: TODO
 .. _moscot: https://moscot-tools.org/
+.. _LineageClass: https://moscot.readthedocs.io/en/latest/genapi/moscot.problems.time.LineageProblem.html
 .. _tutorial: https://moscot.readthedocs.io/en/latest/notebooks/tutorials/100_lineage.html
 .. _LineageOT: https://doi.org/10.1038/s41467-021-25133-1
 .. _TedSim: https://doi.org/10.1093/nar/gkac235
