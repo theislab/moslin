@@ -27,12 +27,12 @@ and write figures to `figures <figures/>`_.
 Results
 -------
 
-.. csv-table:: 
+.. csv-table::
    :header: "Application", "Folder path"
 
-    Fig. 2 (Simulations), `analysis/simulations/ <analysis/simulations/>`__
-    Fig. 3 (C. elegans), `analysis/packer_c_elegans/ <analysis/packer_c_elegans/>`__
-    Fig. 4 (Zebrafish), `analysis/hu_zebrafish_linnaeus/ <analysis/hu_zebrafish_linnaeus/>`__
+    Simulated data (Fig. 2), `analysis/simulations/ <analysis/simulations/>`__
+    C. elegans embryogenesis (Fig. 3), `analysis/packer_c_elegans/ <analysis/packer_c_elegans/>`__
+    Zebrafish heart regeneration (Fig. 4), `analysis/hu_zebrafish_linnaeus/ <analysis/hu_zebrafish_linnaeus/>`__
 
 
 .. _bioRxiv: TODO
