@@ -44,3 +44,7 @@ Results
 .. _c elegans: https://doi.org/10.1126/science.aax1971
 .. _zebrafish: https://doi.org/10.1038/s41588-022-01129-5
 .. _figshare: TODO
+
+Reproducing the zebrafish analysis
+----------------------------------
+The analysis of the zebrafish data is a two-step process; the first step is the calculation of transition matrices using moslin, and the second is the `downstream analysis <https://github.com/theislab/moslin/blob/2-include-the-zebrafish-analysis/analysis/hu_zebrafish_linnaeus/Zebrafish_coupling_analysis.R>`_ of these transition matrices.
