@@ -13,7 +13,6 @@ slurm:
         mem: 16G
         cpus-per-task: 8
         time: 0-12:00  # D-HH:MM
-        # exclude: ibis-ceph-002,ibis-ceph-003,ibis-ceph-004,ibis-ceph-005,ibis-ceph-008,ibis-ceph-009,ibis-ceph-010,ibis-ceph-011,ibis-ceph-012,ibis-ceph-013,ibis-ceph-014,ibis-ceph-015,ibis-ceph-016,ibis-ceph-017,ibis-ceph-018,ibis-ceph-019,ibis216-010-035,ibis216-010-037,ibis216-010-051,ibis216-010-064,ibis216-010-068,ibis216-010-069,ibis216-010-070,ibis216-010-071,ibis216-224-010,ibis216-224-011
 
 fixed:
     p_a: 0.4

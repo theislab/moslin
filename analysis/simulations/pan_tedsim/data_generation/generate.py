@@ -5,7 +5,7 @@ import seml
 from sacred import Experiment
 from sacred.run import Run
 
-ENV_NAME = "dorc2"
+ENV_NAME = "MY_ENV"
 
 ex = Experiment()
 seml.setup_logger(ex)

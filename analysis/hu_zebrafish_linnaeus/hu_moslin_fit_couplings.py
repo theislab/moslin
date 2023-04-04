@@ -58,8 +58,6 @@ def estimate_marginals(adata, dpi_source, dpi_target, time_diff):
     adata.obs.loc[adata.obs["ident"].isin([dpi_source]), "a_marginal"]  = a
     adata.obs.loc[adata.obs["ident"].isin([dpi_target]), "b_marginal"]  = b
 
-    return
-
 
 def fit_couplings_all(args):
     adata = sc.read(DATA_DIR / 'adata.h5ad')

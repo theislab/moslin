@@ -9,8 +9,6 @@ config.update("jax_enable_x64", True)
 
 import sys
 
-sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moscot/src")
-
 import io
 import warnings
 from copy import deepcopy
