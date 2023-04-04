@@ -16,6 +16,9 @@
 # Comparison of these hyperparameters can be done in the section "Cell type-cell type persistency test".
 # Author: B. Spanjaard
 
+# Set below parameter to save figures and datafiles.
+save_output <- F
+
 # Dependencies ####
 library(data.table)
 library(ggplot2)
@@ -434,15 +437,26 @@ ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_a
 
 # Fig 4b and part of Figure 5.2
 pheatmap_filename <- paste("figures/hu_zebrafish_linnaeus/Couplings_pheatmap_", moslin_filename, ".png", sep = "")
-# png(pheatmap_filename, width = 450, height = 350)
-pheatmap::pheatmap(log10(transitions_test), fontsize = 24, legend = T, #clustering_method = "ward.D2",
-                   cluster_rows = F, cluster_cols = F,
-                   show_rownames = F, show_colnames = F,
-                   annotation_row = row_anno,
-                   annotation_col = col_anno,
-                   annotation_names_col = F, annotation_names_row = F,
-                   annotation_colors = ann_colors, annotation_legend = F)
-# dev.off()
+if(save_output){
+  png(pheatmap_filename, width = 450, height = 350)
+  pheatmap::pheatmap(log10(transitions_test), fontsize = 24, legend = T, #clustering_method = "ward.D2",
+                     cluster_rows = F, cluster_cols = F,
+                     show_rownames = F, show_colnames = F,
+                     annotation_row = row_anno,
+                     annotation_col = col_anno,
+                     annotation_names_col = F, annotation_names_row = F,
+                     annotation_colors = ann_colors, annotation_legend = F)
+  dev.off()
+}else{
+  pheatmap::pheatmap(log10(transitions_test), fontsize = 24, legend = T, #clustering_method = "ward.D2",
+                     cluster_rows = F, cluster_cols = F,
+                     show_rownames = F, show_colnames = F,
+                     annotation_row = row_anno,
+                     annotation_col = col_anno,
+                     annotation_names_col = F, annotation_names_row = F,
+                     annotation_colors = ann_colors, annotation_legend = F)
+  
+}
 
 mean_transfers <- transitions.long[, .(Transfer_ratio = sum(Probability)), by = c("Cell_type_from", "Cell_type_to")]
 mean_transfers_wide <- dcast(mean_transfers, Cell_type_from ~ Cell_type_to, value.var = "Transfer_ratio")
@@ -456,32 +470,56 @@ col_anno <- pheatmap_anno[colnames(mean_transfers_mat), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
 # Part of Figure S5.2
-# png(paste("figures/hu_zebrafish_linnaeus/Mean_couplings_pheatmap_", moslin_filename, ".png", sep = ""),
-#     width = 450, height = 350)
-pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T, 
-                   cluster_rows = F, cluster_cols = F,
-                   show_rownames = F, show_colnames = F,
-                   annotation_row = row_anno,
-                   annotation_col = col_anno,
-                   annotation_names_col = F, annotation_names_row = F,
-                   annotation_colors = ann_colors, annotation_legend = F)
-# dev.off()
+if(save_output){
+  png(paste("figures/hu_zebrafish_linnaeus/Mean_couplings_pheatmap_", moslin_filename, ".png", sep = ""),
+      width = 450, height = 350)
+  pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T, 
+                     cluster_rows = F, cluster_cols = F,
+                     show_rownames = F, show_colnames = F,
+                     annotation_row = row_anno,
+                     annotation_col = col_anno,
+                     annotation_names_col = F, annotation_names_row = F,
+                     annotation_colors = ann_colors, annotation_legend = F)
+  dev.off()
+}else{
+  pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T, 
+                     cluster_rows = F, cluster_cols = F,
+                     show_rownames = F, show_colnames = F,
+                     annotation_row = row_anno,
+                     annotation_col = col_anno,
+                     annotation_names_col = F, annotation_names_row = F,
+                     annotation_colors = ann_colors, annotation_legend = F)
+}
 
 # Part of Figure S5.2
-# png("figures/hu_zebrafish_linnaeus/Ct_freqs_H5_Hr27.png",
-#     width = 350, height = 350)
-ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
-  geom_bar(aes(x = Tree, y = Rel_freq, fill = Cell.type), stat = "identity", width = 0.6) +
-  scale_x_discrete(expand = c(0, 0), breaks = c("H5", "Hr27"), labels = c("Ctrl", "3dpi")) + 
-  scale_y_continuous(expand = expansion(mult = c(0, 0), add = c(0, 0.1))) +
-  labs(x = "", y = "Cell type fraction") + 
-  scale_fill_manual(values = celltype_colors) +
-  theme(legend.position = "none",
-        plot.title = element_text(hjust = 0.5, size = 32),
-        axis.title = element_text(size = 24),
-        axis.text = element_text(size = 18),
-        panel.background = element_blank())
-# dev.off()
+if(save_output){
+  png("figures/hu_zebrafish_linnaeus/Ct_freqs_H5_Hr27.png",
+      width = 350, height = 350)
+  ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
+    geom_bar(aes(x = Tree, y = Rel_freq, fill = Cell.type), stat = "identity", width = 0.6) +
+    scale_x_discrete(expand = c(0, 0), breaks = c("H5", "Hr27"), labels = c("Ctrl", "3dpi")) + 
+    scale_y_continuous(expand = expansion(mult = c(0, 0), add = c(0, 0.1))) +
+    labs(x = "", y = "Cell type fraction") + 
+    scale_fill_manual(values = celltype_colors) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 32),
+          axis.title = element_text(size = 24),
+          axis.text = element_text(size = 18),
+          panel.background = element_blank())
+  dev.off()
+}else{
+  ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
+    geom_bar(aes(x = Tree, y = Rel_freq, fill = Cell.type), stat = "identity", width = 0.6) +
+    scale_x_discrete(expand = c(0, 0), breaks = c("H5", "Hr27"), labels = c("Ctrl", "3dpi")) + 
+    scale_y_continuous(expand = expansion(mult = c(0, 0), add = c(0, 0.1))) +
+    labs(x = "", y = "Cell type fraction") + 
+    scale_fill_manual(values = celltype_colors) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 32),
+          axis.title = element_text(size = 24),
+          axis.text = element_text(size = 18),
+          panel.background = element_blank())
+}
 
 # NB This file needs to be created first in the section "Path towards transient fibroblasts"
 transfer_ratios_trees <-
@@ -506,34 +544,58 @@ col_anno <- pheatmap_anno[colnames(transfer_av_ctrl_3dpi_mat), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
 # Part of Figure S5.2
-# png("figures/hu_zebrafish_linnaeus/Moscot_mean_couplings_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
-#     width = 450, height = 350)
-pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 24, legend = T, 
-                   cluster_rows = F, cluster_cols = F,
-                   show_rownames = F, show_colnames = F,
-                   annotation_row = row_anno,
-                   annotation_col = col_anno,
-                   annotation_names_col = F, annotation_names_row = F,
-                   annotation_colors = ann_colors, annotation_legend = F)
-# dev.off()
+if(save_output){
+  png("figures/hu_zebrafish_linnaeus/Moscot_mean_couplings_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
+      width = 450, height = 350)
+  pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 24, legend = T, 
+                     cluster_rows = F, cluster_cols = F,
+                     show_rownames = F, show_colnames = F,
+                     annotation_row = row_anno,
+                     annotation_col = col_anno,
+                     annotation_names_col = F, annotation_names_row = F,
+                     annotation_colors = ann_colors, annotation_legend = F)
+  dev.off()
+}else{
+  pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 24, legend = T, 
+                     cluster_rows = F, cluster_cols = F,
+                     show_rownames = F, show_colnames = F,
+                     annotation_row = row_anno,
+                     annotation_col = col_anno,
+                     annotation_names_col = F, annotation_names_row = F,
+                     annotation_colors = ann_colors, annotation_legend = F)
+}
 
 ct_freqs_ctrl_3dpi <- ct_and_transfer_averages$Cell_type_frequencies[time %in% c("Ctrl", "3dpi")]
 
 # Part of Figure S5.2
-# png("figures/hu_zebrafish_linnaeus/Ct_freqs_ctrl_3dpi.png",
-#     width = 350, height = 350)
-ggplot(ct_freqs_ctrl_3dpi) +
-  geom_bar(aes(x = time, y = Rel_freq, fill = Cell_type), stat = "identity", width = 0.6) +
-  scale_x_discrete(expand = c(0, 0)) +#, breaks = c("H5", "Hr27"), labels = c("Ctrl", "3dpi")) + 
-  scale_y_continuous(expand = expansion(mult = c(0, 0), add = c(0, 0.1))) +
-  labs(x = "", y = "Cell type fraction") + 
-  scale_fill_manual(values = celltype_colors) +
-  theme(legend.position = "none",
-        plot.title = element_text(hjust = 0.5, size = 32),
-        axis.title = element_text(size = 24),
-        axis.text = element_text(size = 18),
-        panel.background = element_blank())
-# dev.off()
+if(save_output){
+  png("figures/hu_zebrafish_linnaeus/Ct_freqs_ctrl_3dpi.png",
+      width = 350, height = 350)
+  ggplot(ct_freqs_ctrl_3dpi) +
+    geom_bar(aes(x = time, y = Rel_freq, fill = Cell_type), stat = "identity", width = 0.6) +
+    scale_x_discrete(expand = c(0, 0)) +#, breaks = c("H5", "Hr27"), labels = c("Ctrl", "3dpi")) + 
+    scale_y_continuous(expand = expansion(mult = c(0, 0), add = c(0, 0.1))) +
+    labs(x = "", y = "Cell type fraction") + 
+    scale_fill_manual(values = celltype_colors) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 32),
+          axis.title = element_text(size = 24),
+          axis.text = element_text(size = 18),
+          panel.background = element_blank())
+  dev.off()
+}else{
+  ggplot(ct_freqs_ctrl_3dpi) +
+    geom_bar(aes(x = time, y = Rel_freq, fill = Cell_type), stat = "identity", width = 0.6) +
+    scale_x_discrete(expand = c(0, 0)) +#, breaks = c("H5", "Hr27"), labels = c("Ctrl", "3dpi")) + 
+    scale_y_continuous(expand = expansion(mult = c(0, 0), add = c(0, 0.1))) +
+    labs(x = "", y = "Cell type fraction") + 
+    scale_fill_manual(values = celltype_colors) +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 32),
+          axis.title = element_text(size = 24),
+          axis.text = element_text(size = 18),
+          panel.background = element_blank())
+}
 
 # Cell type-cell type persistency test ####
 data_paths <- c("data/hu_zebrafish_linnaeus/tmats_moslin_alpha-0.6_epsilon-0.01_beta-0.2_taua-0.9/",
@@ -658,8 +720,10 @@ for(i in 1:nrow(files_dt)){
             legend.key=element_blank(),
             panel.spacing = unit(1, "lines"),
             plot.margin = unit(c(0.2, 0.5, 0, 0.5), "lines"))
-    # ggsave(paste("figures/hu_zebrafish_linnaeus/Moscot_noiter_EndoA_Macroph_distribution_H5_Hr27_", this_run, ".png", sep = ""),
-    #         width = 1.4, height = 0.8, units = "in", device = png, dpi = 900, type = "cairo")
+    if(save_output){
+      ggsave(paste("figures/hu_zebrafish_linnaeus/Moscot_noiter_EndoA_Macroph_distribution_H5_Hr27_", this_run, ".png", sep = ""),
+             width = 1.4, height = 0.8, units = "in", device = png, dpi = 900, type = "cairo")
+    }
   }
   
   print("Testing")
@@ -779,14 +843,16 @@ for(i in 1:nrow(files_dt)){
 }
 
 # Save results
-# for(run_name in names(ct_persistency_results)){
-  # write_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC", run_name, sep = "_")
-#   fwrite(ct_persistency_results[[run_name]], file = write_file_path)
-# }
-# for(run_name in names(ct_persistency_results_ovr)){
-#   write_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC_OvR", run_name, sep = "_")
-#   fwrite(ct_persistency_results_ovr[[run_name]], file = write_file_path)
-# }
+if(save_output){
+  for(run_name in names(ct_persistency_results)){
+    write_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC", run_name, sep = "_")
+    fwrite(ct_persistency_results[[run_name]], file = write_file_path)
+  }
+  for(run_name in names(ct_persistency_results_ovr)){
+    write_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC_OvR", run_name, sep = "_")
+    fwrite(ct_persistency_results_ovr[[run_name]], file = write_file_path)
+  }
+}
 
 # Evaluation of F1 testing results. Set flag to True if wanted.
 if(F){
@@ -831,8 +897,10 @@ Welch_ROC_OvR_plot +
         legend.key=element_blank(),
         panel.spacing = unit(1, "lines"),
         plot.margin = unit(c(0, 0.5, 0, 0.5), "lines"))
-ggsave(paste("figures/hu_zebrafish_linnaeus/Welch_ROC_OvR_", moslin_path_name, ".png", sep = ""),
-       width = 3, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave(paste("figures/hu_zebrafish_linnaeus/Welch_ROC_OvR_", moslin_path_name, ".png", sep = ""),
+         width = 3, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 # AUROCs for OvO analysis
 moslin_path_name <- "tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9"
@@ -878,8 +946,10 @@ Welch_ROC_plot +
         legend.key=element_blank(),
         panel.spacing = unit(1, "lines"),
         plot.margin = unit(c(0, 0.5, 0, 0.5), "lines"))
-# ggsave(paste("figures/hu_zebrafish_linnaeus/Welch_ROC_", moslin_path_name, ".png", sep = ""),
-#        width = 3, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave(paste("figures/hu_zebrafish_linnaeus/Welch_ROC_", moslin_path_name, ".png", sep = ""),
+         width = 3, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 # Different hyperparameter values
 # Figure S5.1
@@ -933,8 +1003,10 @@ g <- ggplot(alpha_AUCs) +
         strip.background = element_rect(fill = NA),
         legend.key=element_blank())
 g
-# ggsave("figures/hu_zebrafish_linnaeus/Welch_alpha_varied_AUCs.png",
-       # width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave("figures/hu_zebrafish_linnaeus/Welch_alpha_varied_AUCs.png",
+         width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 # Extract colors
 b <- ggplot_build(g)
@@ -959,8 +1031,10 @@ ggplot(epsilon_AUCs) +
         panel.border = element_rect(colour = "black", fill = NA, size = 2),
         strip.background = element_rect(fill = NA),
         legend.key=element_blank())
-# ggsave("figures/hu_zebrafish_linnaeus/Welch_epsilon_varied_AUCs.png",
-       # width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave("figures/hu_zebrafish_linnaeus/Welch_epsilon_varied_AUCs.png",
+         width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 beta_AUCs <-
   AUCs[apply(AUCs, 1, function(x){
@@ -980,8 +1054,10 @@ ggplot(beta_AUCs) +
         panel.border = element_rect(colour = "black", fill = NA, size = 2),
         strip.background = element_rect(fill = NA),
         legend.key=element_blank())
-# ggsave("figures/hu_zebrafish_linnaeus/Welch_beta_varied_AUCs.png",
-       # width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave("figures/hu_zebrafish_linnaeus/Welch_beta_varied_AUCs.png",
+         width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 taua_AUCs <-
   AUCs[apply(AUCs, 1, function(x){
@@ -1001,8 +1077,10 @@ ggplot(taua_AUCs) +
         panel.border = element_rect(colour = "black", fill = NA, size = 2),
         strip.background = element_rect(fill = NA),
         legend.key=element_blank())
-# ggsave("figures/hu_zebrafish_linnaeus/Welch_taua_varied_AUCs.png",
-       # width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave("figures/hu_zebrafish_linnaeus/Welch_taua_varied_AUCs.png",
+         width = 3, height = 2, units = "in", device = png, dpi = 900, type = "cairo")
+}
 # End of plotting S5.1b
 
 # Subsample the ROC curves and AUCs:
@@ -1043,8 +1121,10 @@ for(m1 in 1:length(tree_time$Tree[tree_time$time == t1])){
     tot_samples <- tot_samples + ncol(t1_trees_combinations) * ncol(t2_trees_combinations)
   }
 }
-# fwrite(AUC_sample, paste("data/hu_zebrafish_linnaeus/Same_cell_subsampled_ctrl_3dpi_", moslin_path_name, sep = ""))
-# fwrite(AUC_sample, paste("data/hu_zebrafish_linnaeus/Same_cell_subsampled_3dpi_7dpi_", moslin_path_name, sep = ""))
+if(save_output){
+  fwrite(AUC_sample, paste("data/hu_zebrafish_linnaeus/Same_cell_subsampled_", t1, "_", t2, "_", 
+                           moslin_path_name, sep = ""))
+}
 
 ggplot(AUC_sample) + 
   geom_histogram(aes(x = AUC), bins = 60) +
@@ -1059,7 +1139,10 @@ ggplot(AUC_sample) +
         plot.margin = unit(c(0.25, 0.25, 0, 0), units = "line")) +
   scale_x_continuous(expand = c(0, 0), breaks = c(0.97, 0.99), labels = c(0.97, 0.99), limits = c(0.96, 1)) +
   scale_y_continuous(expand = c(0, 0)) #, limits = c(-10, 8500), breaks = c(0, 8000)) +
-# ggsave(paste("figures/hu_zebrafish_linnaeus/Subsampled_", t2, "_Welch_AUC_distribution_", moslin_path_name, ".png", sep = ""),
+if(save_output){
+  ggsave(paste("figures/hu_zebrafish_linnaeus/Subsampled_", t2, "_Welch_AUC_distribution_", 
+               moslin_path_name, ".png", sep = ""))
+}
 # End inset figure 4c
 
 # Path towards transient fibroblasts ####
@@ -1146,7 +1229,9 @@ for(i in 1:nrow(moslin_files)){
   }
 }
 transfer_ratios_trees <- transfer_ratios
-# fwrite(transfer_ratios, "data/hu_zebrafish_linnaeus/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+if(save_output){
+  fwrite(transfer_ratios, "data/hu_zebrafish_linnaeus/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+}
 transfer_ratios_trees <-
   fread("data/hu_zebrafish_linnaeus/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
 
@@ -1203,8 +1288,10 @@ ggplot(t1t2t3_alluvia_plot,
         axis.title.x = element_blank(),
         axis.text = element_text(size = 6),
         panel.background = element_blank())
-# ggsave("figures/hu_zebrafish_linnaeus/Alluvium_article_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
-# width = 3.5, height = 1.8, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave("figures/hu_zebrafish_linnaeus/Alluvium_article_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
+         width = 3.5, height = 1.8, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 # Rules for zooming in:
 # List a cell type and timepoint, a primary cutoff (lower) and a secondary cutoff (higher).
@@ -1254,8 +1341,10 @@ ggplot(t1t2t3_alluvia_zoom_plot,
         axis.title.x = element_blank(),
         axis.text = element_text(size = 6),
         panel.background = element_blank())
-# ggsave("figures/hu_zebrafish_linnaeus/Alluvium_article_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9_col1112const_fixed_t3.png",
-#        width = 2.7, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
+if(save_output){
+  ggsave("figures/hu_zebrafish_linnaeus/Alluvium_article_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9_col1112const_fixed_t3.png",
+         width = 2.7, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
+}
 
 # Bootstrap for percentage confidence intervals
 # Create all existing combinations: pick ctrl, 3dpi, 7dpi datasets (3(4), 6(9), 5(7) for a 50% + 48% downsampling, 
@@ -1322,13 +1411,13 @@ for(i in 1:nrow(x)){
   }
 
 # Calculate confidence intervals
-
-# fwrite(bootstrapped_average_percentages,
-       # "data/hu_zebrafish_linnaeus/Bootstrapped_average_percentages_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+if(save_output){
+  fwrite(bootstrapped_average_percentages,
+         "data/hu_zebrafish_linnaeus/Bootstrapped_average_percentages_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+}
 # bootstrapped_average_percentages <-
 #   fread("data/hu_zebrafish_linnaeus/Bootstrapped_average_percentages_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")
 
-names(bootstrapped_average_percentages)
 bap_long <- melt(bootstrapped_average_percentages, 
                  id.vars = c("t1_time", "t2_time", "Cell_type_from", "Cell_type_to"),
                  variable.name = "Sample_type", value.name = "Percentage", variable.factor = F)
@@ -1353,5 +1442,7 @@ tap_ci <-
         bap_ci[Type == "to", c("t1_time", "t2_time", "Cell_type_from", "Cell_type_to", "Min_095", "Max_095")],
         all = T)
 colnames(tap_ci)[(ncol(tap_ci) - 1):ncol(tap_ci)] <- c("Perc_to_min_095", "Perc_to_max_095")
-# fwrite(tap_ci, "data/hu_zebrafish_linnaeus/Bootstrapped_95_ci_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+if(save_output){
+  fwrite(tap_ci, "data/hu_zebrafish_linnaeus/Bootstrapped_95_ci_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+}
 # tap_ci <- fread("data/hu_zebrafish_linnaeus/Bootstrapped_95_ci_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")
