@@ -17,21 +17,23 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 node_colors = [
-    '#bd6a47',
-    '#bd6a47',
-    '#779538',
-    '#dbd4c0',
-    '#b18393',
-    '#8a6a4b',
-    '#3e70ab',
-    '#9d3d58',
-    '#525566',
-    '#3f5346',
-    '#dbd4c0'
+    "#bd6a47",
+    "#bd6a47",
+    "#779538",
+    "#dbd4c0",
+    "#b18393",
+    "#8a6a4b",
+    "#3e70ab",
+    "#9d3d58",
+    "#525566",
+    "#3f5346",
+    "#dbd4c0",
 ]
 
 
-def _process_data(rna_arrays: Mapping[Literal["early", "late"], np.ndim], *, n_pcs: int = 30, pca=True) -> np.ndarray:
+def _process_data(
+    rna_arrays: Mapping[Literal["early", "late"], np.ndim], *, n_pcs: int = 30, pca=True
+) -> np.ndarray:
     adata = AnnData(rna_arrays["early"], dtype=np.float32).concatenate(
         AnnData(rna_arrays["late"], dtype=np.float32),
         batch_key="time",
@@ -106,7 +108,9 @@ def _build_true_trees(
     pca: bool = True,
     ttp: float = 100.0,
 ) -> Dict[Literal["early", "late"], nx.DiGraph]:
-    cell_arr_adata = [lot_inf.sim.Cell(rna[nid], barcodes[nid]) for nid in range(rna.shape[0])]
+    cell_arr_adata = [
+        lot_inf.sim.Cell(rna[nid], barcodes[nid]) for nid in range(rna.shape[0])
+    ]
     metadata = [meta.iloc[nid].to_dict() for nid in range(rna.shape[0])]
 
     G = _newick2digraph(tree)
@@ -114,7 +118,13 @@ def _build_true_trees(
 
     trees = {"early": _cut_at_depth(G, max_depth=depth), "late": _cut_at_depth(G)}
     rna_arrays = {
-        kind: np.asarray([trees[kind].nodes[n]["cell"].x for n in trees[kind].nodes if _is_leaf(trees[kind], n)])
+        kind: np.asarray(
+            [
+                trees[kind].nodes[n]["cell"].x
+                for n in trees[kind].nodes
+                if _is_leaf(trees[kind], n)
+            ]
+        )
         for kind in ["early", "late"]
     }
     data = _process_data(rna_arrays, n_pcs=n_pcs, pca=pca)
@@ -133,6 +143,7 @@ def _build_true_trees(
 
     return trees
 
+
 def _build_true_trees_draw(
     rna: np.ndarray,
     barcodes: np.ndarray,
@@ -144,7 +155,9 @@ def _build_true_trees_draw(
     pca: bool = True,
     ttp: float = 100.0,
 ) -> Dict[Literal["early", "late"], nx.DiGraph]:
-    cell_arr_adata = [lot_inf.sim.Cell(rna[nid], barcodes[nid]) for nid in range(rna.shape[0])]
+    cell_arr_adata = [
+        lot_inf.sim.Cell(rna[nid], barcodes[nid]) for nid in range(rna.shape[0])
+    ]
     metadata = [meta.iloc[nid].to_dict() for nid in range(rna.shape[0])]
 
     G = _newick2digraph(tree)
@@ -152,7 +165,13 @@ def _build_true_trees_draw(
 
     trees = {"early": _cut_at_depth(G, max_depth=depth), "late": _cut_at_depth(G)}
     rna_arrays = {
-        kind: np.asarray([trees[kind].nodes[n]["cell"].x for n in trees[kind].nodes if _is_leaf(trees[kind], n)])
+        kind: np.asarray(
+            [
+                trees[kind].nodes[n]["cell"].x
+                for n in trees[kind].nodes
+                if _is_leaf(trees[kind], n)
+            ]
+        )
         for kind in ["early", "late"]
     }
     data = _process_data(rna_arrays, n_pcs=n_pcs, pca=pca)
@@ -225,18 +244,24 @@ def state_tree_draw(state_tree="((t1:2, t2:2):1, (t3:2, t4:2):1):2;", path=None)
     labels = {node: node_list[node] for node in state_tree_.nodes}
     node_color = [node_colors[node_list[node]] for node in state_tree_.nodes]
 
-    nx.draw(state_tree_, 
-            pos, #labels=labels, 
-            node_color=node_color, 
-            node_size=400, 
-            arrowsize=20, 
-            arrows=True, 
-            ax=axs, 
-           )
+    nx.draw(
+        state_tree_,
+        pos,  # labels=labels,
+        node_color=node_color,
+        node_size=400,
+        arrowsize=20,
+        arrows=True,
+        ax=axs,
+    )
     axs.set_title("cell state tree", fontsize=22)
     plt.tight_layout()
     if path is not None:
-        plt.savefig(path + "/cell_state_tree.png", bbox_inches="tight", transparent=True, dpi=300)
+        plt.savefig(
+            path + "/cell_state_tree.png",
+            bbox_inches="tight",
+            transparent=True,
+            dpi=300,
+        )
     plt.show()
 
 
@@ -246,7 +271,9 @@ def tree_draw(adata, depth=8, path=None):
     rna = adata.X.copy()
     barcodes = adata.obsm["barcodes"].copy()
 
-    true_trees = _build_true_trees(rna, barcodes, meta=adata.obs, tree=tree, depth=depth, pca=False)
+    true_trees = _build_true_trees(
+        rna, barcodes, meta=adata.obs, tree=tree, depth=depth, pca=False
+    )
 
     g_ = true_trees["early"]
     cols = [node_colors[int(g_.nodes[node]["cluster"])] for node in g_.nodes]
@@ -265,13 +292,29 @@ def plot_cost(lp, depth_early=8, depth_late=12):
     """Plot cost matrix"""
     for problem in lp.problems:
         fig, axs = plt.subplots(1, 2, figsize=(8, 4))
-        sns.heatmap(lp.problems[problem].x.data, ax=axs[0], cbar=False, xticklabels=False, yticklabels=False)
-        axs[0].set_title(f"Barcode distances\n(cells at depth {depth_early})", fontsize=16)
+        sns.heatmap(
+            lp.problems[problem].x.data,
+            ax=axs[0],
+            cbar=False,
+            xticklabels=False,
+            yticklabels=False,
+        )
+        axs[0].set_title(
+            f"Barcode distances\n(cells at depth {depth_early})", fontsize=16
+        )
         axs[0].set_xlabel("cells", fontsize=14)
         axs[0].set_ylabel("cells", fontsize=14)
 
-        sns.heatmap(lp.problems[problem].y.data, ax=axs[1], cbar=False, xticklabels=False, yticklabels=False)
-        axs[1].set_title(f"Barcode distances\n(cells at depth {depth_late})", fontsize=16)
+        sns.heatmap(
+            lp.problems[problem].y.data,
+            ax=axs[1],
+            cbar=False,
+            xticklabels=False,
+            yticklabels=False,
+        )
+        axs[1].set_title(
+            f"Barcode distances\n(cells at depth {depth_late})", fontsize=16
+        )
         axs[1].set_xlabel("cells", fontsize=14)
         axs[1].set_ylabel("cells", fontsize=14)
 

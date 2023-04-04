@@ -8,6 +8,7 @@ from scipy.sparse import issparse
 config.update("jax_enable_x64", True)
 
 import sys
+
 sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moscot/src")
 
 import io
@@ -101,7 +102,7 @@ def run_moscot(
             scale_cost=scale_cost,
             **kwargs,
         )
-    else:   
+    else:
         solver = moscot.backends.ott.FGWSolver(epsilon=epsilon, rank=rank)
         ot_prob = solver(
             xy=rna_dist,
@@ -190,7 +191,10 @@ def run_lot(
 
 
 def process_data(
-    rna_arrays: Mapping[Literal["early", "late"], np.ndim], *, n_pcs: int = 30, pca: bool=True 
+    rna_arrays: Mapping[Literal["early", "late"], np.ndim],
+    *,
+    n_pcs: int = 30,
+    pca: bool = True,
 ) -> np.ndarray:
     adata = AnnData(rna_arrays["early"], dtype=float).concatenate(
         AnnData(rna_arrays["late"], dtype=float),
@@ -418,7 +422,7 @@ def build_true_trees(
     *,
     tree: str,
     depth: int,
-    max_depth: Optional[int]=None,
+    max_depth: Optional[int] = None,
     n_pcs: int = 30,
     pca: bool = True,
     ttp: float = 100.0,
@@ -434,7 +438,10 @@ def build_true_trees(
         sn, tn = G.nodes[s], G.nodes[t]
         assert is_valid_edge(sn, tn), (s, t)
 
-    trees = {"early": cut_at_depth(G, max_depth=depth), "late": cut_at_depth(G, max_depth=max_depth)}
+    trees = {
+        "early": cut_at_depth(G, max_depth=depth),
+        "late": cut_at_depth(G, max_depth=max_depth),
+    }
     rna_arrays = {
         kind: np.asarray(
             [
@@ -445,9 +452,8 @@ def build_true_trees(
         )
         for kind in ["early", "late"]
     }
-    
+
     data = process_data(rna_arrays, n_pcs=n_pcs, pca=pca)
-    
 
     n_early_leaves = len([n for n in trees["early"] if is_leaf(trees["early"], n)])
     data_early, data_late = data[:n_early_leaves], data[n_early_leaves:]
@@ -486,7 +492,15 @@ def prepare_data(
     if ssr is not None:
         barcodes = stochastic_silencing(barcodes, stochastic_silencing_rate=ssr)
     true_trees = build_true_trees(
-        rna, barcodes, meta=adata.obs, tree=tree, depth=depth, max_depth=max_depth, n_pcs=n_pcs, pca=pca, ttp=ttp
+        rna,
+        barcodes,
+        meta=adata.obs,
+        tree=tree,
+        depth=depth,
+        max_depth=max_depth,
+        n_pcs=n_pcs,
+        pca=pca,
+        ttp=ttp,
     )
     data_arrays = {
         "late": lot_inf.extract_data_arrays(true_trees["late"]),
