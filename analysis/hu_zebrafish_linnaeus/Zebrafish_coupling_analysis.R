@@ -1,10 +1,27 @@
+# Description ####
+# Analyze zebrafish transition matrices; create zebrafish heart regeneration figure and supplemental figures
+# in moslin manuscript.
+# This script requires data files found on figshare: https://figshare.com/account/projects/163357/articles/22502974
+# and moslin-computed transition matrices from run_sbatch_hu_moslin.py.
+# Transition matrices that are analysed in this script are:
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9 (default hyperparameters)
+# tmats_moslin_alpha-0.6_epsilon-0.01_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.005_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.4_epsilon-0.01_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.1_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.3_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.95 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.85 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.1_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# Comparison of these hyperparameters can be done in the section "Cell type-cell type persistency test".
+# Author: B. Spanjaard
+
 # Dependencies ####
 library(data.table)
 library(ggplot2)
 library(plotROC)
 library(ggalluvial)
 
-# setwd("./Scripts/notebooks/hu_zebrafish_linnaeus/")
 tree_time <- fread("./data/hu_zebrafish_linnaeus/Tree_times")
 
 AverageFrequenciesAndTransferRatios <- function(transfer_ratios, tree_times, all_ct_combinations = NULL){
