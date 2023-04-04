@@ -1,15 +1,12 @@
 #!/bin/bash
 
-PROJECT_DIR='/cs/labs/mornitzan/zoe.piran/research/projects/moslin_reproducibility/notebooks/hu_zebrafish_linnaeus'
+PROJECT_DIR=""
 
 alpha=$1
 epsilon=$2
 beta=$3
 tau_a=$4
 
-module load python/3.9
-module load cuda
-module load tensorflow
-source /cs/labs/mornitzan/zoe.piran/venvsc/bin/activate
+# activte env
 
 python3 ${PROJECT_DIR}/hu_moslin_fit_couplings.py --alpha ${alpha} --epsilon ${epsilon} --beta ${beta} --tau_a ${tau_a}

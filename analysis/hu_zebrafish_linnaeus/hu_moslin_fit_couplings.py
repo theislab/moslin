@@ -14,8 +14,7 @@ from jax.config import config
 config.update("jax_enable_x64", True)
 
 
-sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moscot/src")
-sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moslin_reproducibility")
+sys.path.insert(0, "../../../") 
 
 from moscot.problems.time import LineageProblem, TemporalProblem
 

@@ -2,8 +2,8 @@ from subprocess import Popen
 import os
 import sys
 
-
-sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moslin_reproducibility")
+LCL_DIR = ""
+sys.path.insert(0, LCL_DIR)
 
 from paths import DATA_DIR
 

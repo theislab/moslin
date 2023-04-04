@@ -1,4 +1,5 @@
 import copy
+import argparse
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -14,6 +15,7 @@ import lineageot.simulation as sim
 import lineageot.evaluation as sim_eval
 import lineageot.inference as sim_inf
 
+import os
 import sys
 from jax.config import config
 
@@ -24,13 +26,13 @@ from ott.solvers.quadratic import gromov_wasserstein
 from ott.problems.quadratic import quadratic_problem
 
 sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moscot/src")
-sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moslin_reproducibility")
+sys.path.insert(0, "../../../") 
 
 from moscot.problems.time import LineageProblem, TemporalProblem
 from paths import DATA_DIR, FIG_DIR
 
-DATA_DIR = DATA_DIR / "forrow_lineageot_simulated"
-FIG_DIR = FIG_DIR / "forrow_lineageot_simulated"
+DATA_DIR = DATA_DIR / "simulations/forrow_2gene"
+FIG_DIR = FIG_DIR / "simulations/forrow_2gene"
 
 import mplscience
 
@@ -73,15 +75,15 @@ def simulate_seeds(
     if seeds is None:
         seeds = [
             4698.,
-            12102.,
-            23860.,
-            25295.,
-            30139.,
-            36489.,
-            38128.,
-            48022.,
-            49142.,
-            59706.
+            # 12102.,
+            # 23860.,
+            # 25295.,
+            # 30139.,
+            # 36489.,
+            # 38128.,
+            # 48022.,
+            # 49142.,
+            # 59706.
         ]
     sim_dicts = {}
     for seed in seeds:
@@ -106,7 +108,7 @@ def fit_seeds(
     
 ):
     if epsilons is None:
-        epsilons = np.logspace(-4, 1, 15),
+        epsilons = np.logspace(-4, 1, 15)
     if alphas is None:
         alphas = [0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 0.95, 0.98, 0.999]
     if cost_keys is None:
@@ -318,6 +320,11 @@ def fit_seeds(
                 df = pd.concat((df, dict_), ignore_index=True)
 
     df.to_csv(DATA_DIR / f"{flow_type}_res_seeds.csv")
+
+    with open(DATA_DIR / f"{flow_type}_ancestor_errors_moslin.pkl", "wb") as fout:
+        pickle.dump(ancestor_errors_moslin, fout)
+    with open(DATA_DIR / f"{flow_type}_descendant_errors_moslin.pkl", "wb") as fout:
+        pickle.dump(descendant_errors_moslin, fout)
     if verbose:
         print("    Done!")
     if return_res:
@@ -330,6 +337,14 @@ def simulate_data(
         seed: int = 257,
         save: bool = True,
 ):
+    # Check if simulation exists
+    
+    fpath = DATA_DIR / f"{flow_type}_{seed}_sim.pickle"
+    if os.path.isfile(fpath):
+        with open(fpath, "rb") as fin:
+            res = pickle.load(fin)
+        return res
+    
     # Set simulation parameters
     np.random.seed(seed)
 
@@ -404,14 +419,6 @@ def simulate_data(
 
     rate_estimate = sim_inf.rate_estimator(barcode_arrays["late"], sample_times["late"])
 
-#     print("Fraction unmutated barcodes: ", {key: np.sum(barcode_arrays[key] == 0) / barcode_arrays[key].size
-#                                             for key in barcode_arrays})
-#     print()
-
-#     print("Rate estimate: ", rate_estimate)
-#     print("True rate: ", sim_params.mutation_rate / sim_params.barcode_length)
-#     print("Rate accuracy: ", rate_estimate * sim_params.barcode_length / sim_params.mutation_rate)
-
     # (1) Compute Hamming distance matrices for neighbor joining
     # (2) Compute neighbor-joining tree
     # (3) Annotate fitted tree with internal node times
@@ -465,7 +472,6 @@ def simulate_data(
         "rna_cost": rna_cost
     }
 
-    fpath = DATA_DIR / f"{flow_type}_{seed}_sim.pickle"
     if save:
         with open(fpath, "wb") as fout:
             pickle.dump(res, fout)
@@ -725,15 +731,16 @@ def plot_metrics(
 
 
 def plot_trajectory(
-        sim_dict,
-        flow_type,
-        thr=1e-8,
-        alpha_scale=1,
-        ax=None,
-        savefig=False,
-        subsample=False,
-        legend_off=True,
-        **kwargs
+    sim_dict,
+    flow_type,
+    thr=1e-8,
+    alpha_scale=1,
+    ax=None,
+    savefig=False,
+    subsample=False,
+    legend_off=True,
+    title=True,
+    **kwargs
 ):
     """  
     Plot matrix M in 2D with  lines using alpha values
@@ -788,9 +795,22 @@ def plot_trajectory(
     plt.axis("off")
     if legend_off:
         plt.legend().remove()
+    if title:
+        plt.title(flow_type)
     plt.tight_layout()
     if savefig:
         plt.savefig(FIG_DIR / f"{flow_type}_trajectory.png", bbox_inches="tight", transparent=True, dpi=300)
     plt.show()
 
     return sources, targets
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--flow_type',
+                        type=str,
+                        required=False,
+                        default="bifurcation")
+    args = parser.parse_args()
+
+    run_seeds(args.flow_type)
