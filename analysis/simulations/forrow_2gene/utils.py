@@ -16,7 +16,6 @@ import lineageot.evaluation as sim_eval
 import lineageot.inference as sim_inf
 
 import os
-import sys
 from jax.config import config
 
 config.update("jax_enable_x64", True)
@@ -24,9 +23,6 @@ config.update("jax_enable_x64", True)
 from ott.geometry import pointcloud, geometry
 from ott.solvers.quadratic import gromov_wasserstein
 from ott.problems.quadratic import quadratic_problem
-
-sys.path.insert(0, "/cs/labs/mornitzan/zoe.piran/research/projects/moscot/src")
-sys.path.insert(0, "../../../")
 
 from moscot.problems.time import LineageProblem, TemporalProblem
 from paths import DATA_DIR, FIG_DIR
