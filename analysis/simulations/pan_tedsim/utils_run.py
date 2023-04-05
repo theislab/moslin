@@ -1,13 +1,11 @@
+import jax
+jax.config.update("jax_enable_x64", True)
+
 import pickle
 from logging import getLogger
 from pathlib import Path
 
-from jax.config import config
 from scipy.sparse import issparse
-
-config.update("jax_enable_x64", True)
-
-import sys
 
 import io
 import warnings
@@ -217,7 +215,7 @@ def compute_dists(
     barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
     dist_cache: Optional[Path] = None,
     scale: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute distances for time_1, time_2 and joint.
 
@@ -226,9 +224,11 @@ def compute_dists(
     trees:
         The lineage tree fitted to cells at time_1 and time_2. Nodes should already be annotated with times.
         Annotations related to cell state will be added.
+    rna_arrays: RNA arrays of later and early cells.
     barcode_arrays: barcode arrays of late and early cells.
     tree_type: the type of distance to evaluate.
     dist_cache: Path to a cache file where to read/write the distance matrices.
+    scale: Whether to scale the cost by maximum.
 
     Returns
     -------

@@ -1,3 +1,6 @@
+import jax
+jax.config.update("jax_enable_x64", True)
+
 import os
 import sys
 import numpy as np
@@ -9,10 +12,6 @@ import scanpy as sc
 import pandas as pd
 
 import ot
-
-from jax.config import config
-
-config.update("jax_enable_x64", True)
 
 from moscot.problems.time import LineageProblem, TemporalProblem
 

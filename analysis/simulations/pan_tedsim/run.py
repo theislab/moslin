@@ -86,9 +86,6 @@ def benchmark(
     )
 
     if kind == "moscot":
-        dist_cache = Path(
-            f"costs/pa={p_a}_ss={ss}_ds={data_seed}_tt={tree_type}_ssr={ssr}_depth={depth}.pkl"
-        )
         edist, ldist, rna_dist = utils_run.compute_dists(
             tree_type,
             trees=true_trees,

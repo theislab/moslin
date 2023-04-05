@@ -241,12 +241,11 @@ def state_tree_draw(state_tree="((t1:2, t2:2):1, (t3:2, t4:2):1):2;", path=None)
     pos = nx.drawing.nx_agraph.graphviz_layout(state_tree_, prog="dot")
 
     node_list = [3, 4, 1, 2, 5, 7, 6]
-    labels = {node: node_list[node] for node in state_tree_.nodes}
     node_color = [node_colors[node_list[node]] for node in state_tree_.nodes]
 
     nx.draw(
         state_tree_,
-        pos,  # labels=labels,
+        pos,
         node_color=node_color,
         node_size=400,
         arrowsize=20,
