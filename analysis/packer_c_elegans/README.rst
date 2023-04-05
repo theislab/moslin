@@ -11,8 +11,8 @@ File description
 ----------------
 
 .. csv-table::
-   :delim: |
-   :header: "File"|"What it does"
+   :delim: \t
+   :header: "File"\t"What it does"
 
     `run.py`|Benchmark moslin and `LineageOT`_ across a grid of hyperparameters using `SEML`_. The gridsearch parameters are specific in `moslin.yml` and `lot.yml` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in `utils.py`.
     `ML_2023-03-31_explore_c_elegans.ipynb`|Visualize the two data subsets using in the manuscript, all cells with precise lineage information and the ABpxp lineage.
