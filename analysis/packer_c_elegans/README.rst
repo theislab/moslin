@@ -13,7 +13,7 @@ File description
    :header: "File", "What it does"
    :delim: |
 
-    :file:`run.py` | Benchmark moslin and `LineageOT`_ across a grid of hyperparameters using `SEML`_. The gridsearch parameters are specified in `moslin.yml` and `lot.yml` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in `utils.py`.
+    :path:`run.py` | Benchmark moslin and `LineageOT`_ across a grid of hyperparameters using `SEML`_. The gridsearch parameters are specified in `moslin.yml` and `lot.yml` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in `utils.py`.
     `ML_2023-03-31_explore_c_elegans.ipynb` | Visualize the two data subsets employed in the manuscript, all cells with precise lineage information and the ABpxp lineage.
     `ML_2023-03-31_prepare_data.ipynb` | Clean up provided metadata, add TF annotations, aggregate clusters and assign custom colors.
     `ML_2023-03-31_celegans_bar.ipynb` | Visualize the benchmark results in terms of the mean error.
