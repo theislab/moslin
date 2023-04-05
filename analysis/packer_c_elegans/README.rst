@@ -11,11 +11,11 @@ File description
 ----------------
 
 .. csv-table::
-   :delim: \t
-   :header: "File"\t"What it does"
+   :delim: |
+   :header:"File"|"What it does"
 
-    `run.py`|Benchmark moslin and `LineageOT`_ across a grid of hyperparameters using `SEML`_. The gridsearch parameters are specific in `moslin.yml` and `lot.yml` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in `utils.py`.
-    `ML_2023-03-31_explore_c_elegans.ipynb`|Visualize the two data subsets using in the manuscript, all cells with precise lineage information and the ABpxp lineage.
+    `run.py` | Benchmark moslin and `LineageOT`_ across a grid of hyperparameters using `SEML`_. The gridsearch parameters are specific in `moslin.yml` and `lot.yml` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in `utils.py`.
+    `ML_2023-03-31_explore_c_elegans.ipynb` | Visualize the two data subsets using in the manuscript, all cells with precise lineage information and the ABpxp lineage.
     `ML_2023-03-31_prepare_data.ipynb` | Clean up provided metadata, add TF annotations, aggregate clusters and assign custom colors.
     `ML_2023-03-31_celegans_bar.ipynb` | Visualize the benchmark results in terms of the mean error.
     `ML_2023-03-31_moslin_abpxp.ipynb` | Run moslin on the ABpxp lineage using the identified hyperparameters.
