@@ -154,3 +154,7 @@ dmypy.json
 
 # editor
 .idea
+
+# add small files for C. elegans analysis
+!data/packer_c_elegans/Caenorhabditis_elegans_TF.txt
+!data/packer_c_elegans/palantir/ML_2023-03-30_waypoints.csv
