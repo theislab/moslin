@@ -19,7 +19,7 @@ File description
     ``ML_2023-03-31_celegans_bar.ipynb`` | Visualize the benchmark results in terms of the mean error.
     ``ML_2023-03-31_moslin_abpxp.ipynb`` | Run moslin on the ABpxp lineage using the identified hyperparameters.
     ``ML_2023-03-31_zoom_in_abpxp.ipynb`` | Zoom-in onto one pair of time points and explore method differences.
-    ``ML_2023-03-31_palantir.ipynb``` | Run `Palantir`_ and `MAGIC`_ to obtain a pseudotime and imputed gene expression, respectively. Imputed data is only used to visualize gene expression trends.
+    ``ML_2023-03-31_palantir.ipynb`` | Run `Palantir`_ and `MAGIC`_ to obtain a pseudotime and imputed gene expression, respectively. Imputed data is only used to visualize gene expression trends.
     ``ML_2023-03-31_cellrank_abpxp.ipynb`` | Run CellRank on the ABpxp lineage, based on moslin's couplings. Compute and visualize terminal states, fate probabilities, driver genes, and expression trends.
 
 .. _figshare: https://figshare.com/account/projects/163357/articles/22491340
