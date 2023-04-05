@@ -12,7 +12,7 @@ File description
 
 .. csv-table::
    :header: "File"|"What it does"
-   :delim: |
+   :delim:|
 
     `run.py` | Benchmark moslin and `LineageOT`_ across a grid of hyperparameters using `SEML`_. The gridsearch parameters are specific in `moslin.yml` and `lot.yml` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in `utils.py`.
     `ML_2023-03-31_explore_c_elegans.ipynb` | Visualize the two data subsets using in the manuscript, all cells with precise lineage information and the ABpxp lineage.
@@ -26,5 +26,5 @@ File description
 .. _figshare: TODO
 .. _SEML: https://github.com/TUM-DAML/seml
 .. _LineageOT: https://doi.org/10.1038/s41467-021-25133-1
-.._ Palantir: https://doi.org/10.1038/s41587-019-0068-4
-.._ MAGIC: https://doi.org/10.1016/j.cell.2018.05.061
+.. _Palantir: https://doi.org/10.1038/s41587-019-0068-4
+.. _MAGIC: https://doi.org/10.1016/j.cell.2018.05.061
