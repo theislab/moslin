@@ -1,23 +1,21 @@
 import jax
+
 jax.config.update("jax_enable_x64", True)
 
-import os
-import sys
-import numpy as np
-import pickle as pkl
 import argparse
+import os
+import pickle as pkl
+import sys
+
 import networkx as nx
-
-import scanpy as sc
-import pandas as pd
-
+import numpy as np
 import ot
-
+import pandas as pd
+import scanpy as sc
 from moscot.problems.time import LineageProblem, TemporalProblem
 
 sys.path.insert(0, "../../../")
-from paths import DATA_DIR, CACHE_DIR, FIG_DIR
-
+from paths import CACHE_DIR, DATA_DIR
 
 DATA_DIR = DATA_DIR / "hu_zebrafish_linnaeus"
 

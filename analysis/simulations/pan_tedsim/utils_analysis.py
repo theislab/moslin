@@ -1,20 +1,16 @@
+import io
 from copy import deepcopy
 from typing import Any, Dict, List, Literal, Mapping, Optional
-import io
 
-from Bio import Phylo
 import lineageot.inference as lot_inf
-
-from anndata import AnnData
-import scanpy as sc
-
+import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
-
+import scanpy as sc
 import seaborn as sns
-import matplotlib.pyplot as plt
-
-import networkx as nx
+from anndata import AnnData
+from Bio import Phylo
 
 node_colors = [
     "#bd6a47",

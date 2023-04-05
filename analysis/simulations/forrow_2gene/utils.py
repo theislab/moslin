@@ -1,30 +1,28 @@
-import copy
+import jax
+
+jax.config.update("jax_enable_x64", True)
+
 import argparse
+import copy
+import os
 import pickle
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
-import pandas as pd
-import ot
-from typing import Literal, Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 import anndata
-import networkx as nx
-
-import lineageot.simulation as sim
 import lineageot.evaluation as sim_eval
 import lineageot.inference as sim_inf
-
-import os
-from jax.config import config
-
-config.update("jax_enable_x64", True)
-
-from ott.geometry import pointcloud, geometry
-from ott.solvers.quadratic import gromov_wasserstein
-from ott.problems.quadratic import quadratic_problem
-
+import lineageot.simulation as sim
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import ot
+import pandas as pd
+import seaborn as sns
 from moscot.problems.time import LineageProblem, TemporalProblem
+from ott.geometry import geometry, pointcloud
+from ott.problems.quadratic import quadratic_problem
+from ott.solvers.quadratic import gromov_wasserstein
+
 from paths import DATA_DIR, FIG_DIR
 
 DATA_DIR = DATA_DIR / "simulations/forrow_2gene"
@@ -190,7 +188,7 @@ def fit_seeds(
                 return_dict=False,
             )
 
-    # moslin-ot
+    # moslin
     ancestor_errors_ot = {}
 
     for seed, couplings_seed in ot_couplings.items():
@@ -414,7 +412,7 @@ def simulate_data(
     )
     sample_times = {"early": time_early, "late": time_late}
 
-    ## Running the simulation
+    # Running the simulation
     sample = sim.sample_descendants(initial_cell.deepcopy(), time_late, sim_params)
 
     # Extracting trees and barcode matrices
@@ -450,7 +448,6 @@ def simulate_data(
     sim_inf.add_nodes_at_time(true_trees["late, annotated"], sample_times["early"])
 
     # Infer ancestor locations for the late cells based on the true lineage tree
-
     observed_nodes = [
         n for n in sim_inf.get_leaves(true_trees["late, annotated"], include_root=False)
     ]
@@ -469,9 +466,8 @@ def simulate_data(
         key: sim_inf.compute_tree_distances(true_trees[key]) for key in true_trees
     }
 
-    # Fit lineaeg tree with LineageOT
-    # Estimate mutation rate from fraction of unmutated barcodes
-
+    # Fit lineage tree with LineageOT
+    # Estimate mutation rate from fraction of non-mutated barcodes
     rate_estimate = sim_inf.rate_estimator(barcode_arrays["late"], sample_times["late"])
 
     # (1) Compute Hamming distance matrices for neighbor joining
@@ -519,7 +515,6 @@ def simulate_data(
     )
 
     # Compute cost matrices for each method
-
     rna_cost = {}
     rna_cost["early"] = ot.utils.dist(
         rna_arrays["early"],
@@ -551,7 +546,7 @@ def simulate_data(
 
 
 def fit_lineageOT(
-    epsilons, rna_arrays, ancestor_info, sample_times, sim_params, true_trees, **kwargs
+    epsilons, rna_arrays, ancestor_info, sample_times, sim_params, true_trees, **_kwargs
 ):
     # Compute cost matrices for each setting
     coupling_costs = {}
@@ -561,14 +556,6 @@ def fit_lineageOT(
     coupling_costs["lineageOT, fitted tree"] = ot.utils.dist(
         rna_arrays["early"], ancestor_info["fitted tree"][0]
     ) @ np.diag(ancestor_info["fitted tree"][1] ** (-1))
-
-    early_time_rna_cost = ot.utils.dist(
-        rna_arrays["early"],
-        sim_inf.extract_ancestor_data_arrays(
-            true_trees["late"], sample_times["early"], sim_params
-        )[0],
-    )
-    late_time_rna_cost = ot.utils.dist(rna_arrays["late"], rna_arrays["late"])
 
     couplings_lot = {}
     couplings_true = {}
@@ -657,6 +644,7 @@ def fit_moslin_ot(
 def fit_moslin_gw(
     adata: anndata.AnnData,
     epsilons: List[float],
+    # TODO(zoepiran): this is unused - if intended, please remove + also from callers
     alphas: List[float],
     cost_matrices_key: Literal["true", "hamming", "fitted"],
 ):
@@ -817,7 +805,6 @@ def plot_metrics(
     """
     fig, axs = plt.subplots(1, 1, figsize=(8, 4))
     pal = sns.diverging_palette(220, 20, n=len(ys_dict))
-    # pal = ["#e1be6a","#e4c478","#e7cb87","#ead196","#edd8a5","#f0deb4","#f3e5c3","#f6ebd2","#f9f2e1","#fcf8f0","#ffffff"]
     pal_dict = (
         pal_dict
         if pal_dict is not None
@@ -849,7 +836,6 @@ def plot_metrics(
     )
     plt.tight_layout()
     plt.show()
-    return
 
 
 def plot_trajectory(
@@ -857,6 +843,7 @@ def plot_trajectory(
     flow_type,
     thr=1e-8,
     alpha_scale=1,
+    # TODO(zoepiran): unused after deleting unused variables
     ax=None,
     savefig=False,
     subsample=False,
@@ -864,10 +851,11 @@ def plot_trajectory(
     title=True,
     **kwargs,
 ):
-    """
-    Plot matrix M in 2D with  lines using alpha values
+    """Plot matrix M in 2D with lines using alpha values.
+
     Plot lines between source and target 2D samples with a color
     proportional to the value of the matrix G between samples.
+
     Notes
     -----
     This function is inspired from LineageOT implementation.
@@ -893,8 +881,6 @@ def plot_trajectory(
     size = 4
     if ("color" not in kwargs) and ("c" not in kwargs):
         kwargs["color"] = colors["line"]
-    if ax is None:
-        fig, ax = plt.subplots(1, 1, figsize=(size, size))
 
     mx = G.max()
     sources = []

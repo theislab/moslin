@@ -1,15 +1,13 @@
 import jax
+
 jax.config.update("jax_enable_x64", True)
 
-import pickle
-from logging import getLogger
-from pathlib import Path
-
-from scipy.sparse import issparse
-
 import io
+import pickle
 import warnings
 from copy import deepcopy
+from logging import getLogger
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
 import lineageot.core as lot_core
@@ -23,6 +21,7 @@ import scanpy as sc
 from anndata import AnnData
 from Bio import Phylo
 from jax import numpy as jnp
+from scipy.sparse import issparse
 from sklearn.metrics.pairwise import euclidean_distances
 
 CASETTE_SIZE = 4
@@ -32,7 +31,7 @@ N_CASETTES = 8
 logger = getLogger()
 
 
-# take from Cassiopeia
+# taken from Cassiopeia
 def get_cassettes() -> List[int]:
     cassettes = [(CASETTE_SIZE * j) for j in range(0, N_CASETTES)]
     return cassettes
@@ -254,6 +253,7 @@ def compute_dists(
         edist[np.isnan(edist)] = np.nanmax(edist)
         ldist[np.isnan(ldist)] = np.nanmax(ldist)
     elif tree_type == "cas_dists":  # cassiopeia w\o mle
+        # TODO(zoepiran): this function is missing
         edist = cassiopeia_distances(barcode_arrays["early"], estim="const")
         ldist = cassiopeia_distances(barcode_arrays["late"], estim="const")
     elif tree_type == "cas":  # cassiopeia

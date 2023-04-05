@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECT_DIR="/moslin/analysis/simulations/forrow_2gene"
+PROJECT_DIR=""
 
 flow_type=$1
 

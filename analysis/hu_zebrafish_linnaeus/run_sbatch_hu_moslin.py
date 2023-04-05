@@ -1,5 +1,5 @@
-from subprocess import Popen
 import sys
+from subprocess import Popen
 
 LCL_DIR = ""
 sys.path.insert(0, LCL_DIR)
