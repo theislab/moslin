@@ -46,5 +46,5 @@ Results
 .. _TedSim: https://doi.org/10.1093/nar/gkac235
 .. _c elegans: https://doi.org/10.1126/science.aax1971
 .. _zebrafish: https://doi.org/10.1038/s41588-022-01129-5
-.._ visualizing: https://moscot.readthedocs.io/en/latest/user.html#module-moscot.plotting
+.. _visualizing: https://moscot.readthedocs.io/en/latest/user.html#module-moscot.plotting
 .. _figshare: https://doi.org/10.6084/m9.figshare.c.6533377.v1
