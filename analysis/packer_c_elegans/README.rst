@@ -22,7 +22,7 @@ File description
     ``ML_2023-03-31_palantir.ipynb`` | Run `Palantir`_ and `MAGIC`_ to obtain a pseudotime and imputed gene expression, respectively. Imputed data is only used to visualize gene expression trends.
     ``ML_2023-03-31_cellrank_abpxp.ipynb`` | Run CellRank on the ABpxp lineage, based on moslin's couplings. Compute and visualize terminal states, fate probabilities, driver genes, and expression trends.
 
-.. _figshare: https://figshare.com/account/projects/163357/articles/22491340
+.. _figshare: https://doi.org/10.6084/m9.figshare.c.6533377.v1
 .. _SEML: https://github.com/TUM-DAML/seml
 .. _LineageOT: https://doi.org/10.1038/s41467-021-25133-1
 .. _Palantir: https://doi.org/10.1038/s41587-019-0068-4
