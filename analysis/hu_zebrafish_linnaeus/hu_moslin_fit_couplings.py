@@ -257,7 +257,6 @@ if __name__ == "__main__":
     parser.add_argument("--epsilon", type=float, required=False, default=0.05)
     parser.add_argument("--beta", type=float, required=False, default=0.2)
     parser.add_argument("--tau_a", type=float, required=False, default=0.9)
-    parser.add_argument("--n_iters", type=int, required=False, default=1)
     args = parser.parse_args()
 
     fit_couplings_all(args)
