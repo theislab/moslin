@@ -49,7 +49,7 @@ def benchmark(
     alpha: float,
     epsilon: float,
     ssr: Optional[float],
-    tree_type: Literal["gt", "bc", "cas_dists", "cas"],
+    tree_type: Literal["gt", "bc"],
     kind: Literal["moscot", "lot"] = "moscot",
     scale_cost: Optional[Literal["mean", "max_cost"]] = "max_cost",
     depth: int = 8,

@@ -1,0 +1,34 @@
+seml:
+    executable: run.py
+    name: lot
+    output_dir: experiments  # this directory must exist already
+    project_root_dir: .
+
+slurm:
+    experiments_per_job: 1
+    max_simultaneous_jobs: 16
+    sbatch_options_template: CPU
+    sbatch_options:
+        mem: 24G
+        cpus-per-task: 12
+        time: 0-04:00  # D-HH:MM
+
+fixed:
+    kind: lot
+    depth: 10
+    tree_type: bc
+    alpha: null
+    p_a: 0.4
+    ss: 0.4
+
+grid:
+    epsilon:
+        type: choice
+        options: [1e-3, 1e-2, 1e-1, 1]
+    data_seed:
+        type: choice
+        options: [23860, 50349, 36489, 59707, 38128, 25295, 49142, 12102, 30139, 4698]
+    ssr:
+        type: choice
+        options: [null, 0.1, 0.2, 0.3, 0.4]
+

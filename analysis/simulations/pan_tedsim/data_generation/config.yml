@@ -1,6 +1,5 @@
 seml:
     executable: generate.py
-    conda_environment: dorc2
     name: tedsim_datagen
     output_dir: experiments  # this directory must exist already
     project_root_dir: .
