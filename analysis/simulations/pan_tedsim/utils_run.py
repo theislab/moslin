@@ -208,7 +208,7 @@ def process_data(
 
 
 def compute_dists(
-    tree_type: Literal["gt", "bc", "cas_dists", "cas"],
+    tree_type: Literal["gt", "bc"],
     trees: Mapping[Literal["early", "late"], nx.DiGraph],
     rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
     barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
@@ -252,13 +252,6 @@ def compute_dists(
         ldist = lot_inf.barcode_distances(barcode_arrays["late"])
         edist[np.isnan(edist)] = np.nanmax(edist)
         ldist[np.isnan(ldist)] = np.nanmax(ldist)
-    elif tree_type == "cas_dists":  # cassiopeia w\o mle
-        # TODO(zoepiran): this function is missing
-        edist = cassiopeia_distances(barcode_arrays["early"], estim="const")
-        ldist = cassiopeia_distances(barcode_arrays["late"], estim="const")
-    elif tree_type == "cas":  # cassiopeia
-        edist = cassiopeia_distances(barcode_arrays["early"], estim="mle")
-        ldist = cassiopeia_distances(barcode_arrays["late"], estim="mle")
     else:
         raise NotImplementedError(f"Tree type `{tree_type}` not yet implemented.")
 

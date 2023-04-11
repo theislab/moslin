@@ -76,15 +76,15 @@ def simulate_seeds(
     if seeds is None:
         seeds = [
             4698.0,
-            # 12102.,
-            # 23860.,
-            # 25295.,
-            # 30139.,
-            # 36489.,
-            # 38128.,
-            # 48022.,
-            # 49142.,
-            # 59706.
+            12102.,
+            23860.,
+            25295.,
+            30139.,
+            36489.,
+            38128.,
+            48022.,
+            49142.,
+            59706.
         ]
     sim_dicts = {}
     for seed in seeds:
@@ -149,7 +149,6 @@ def fit_seeds(
             gw_couplings[seed][key] = fit_moslin_gw(
                 adatas[seed],
                 epsilons,
-                alphas,
                 cost_matrices_key=key,
             )
 
@@ -644,8 +643,6 @@ def fit_moslin_ot(
 def fit_moslin_gw(
     adata: anndata.AnnData,
     epsilons: List[float],
-    # TODO(zoepiran): this is unused - if intended, please remove + also from callers
-    alphas: List[float],
     cost_matrices_key: Literal["true", "hamming", "fitted"],
 ):
     # Compute cost matrices for each setting
@@ -843,8 +840,6 @@ def plot_trajectory(
     flow_type,
     thr=1e-8,
     alpha_scale=1,
-    # TODO(zoepiran): unused after deleting unused variables
-    ax=None,
     savefig=False,
     subsample=False,
     legend_off=True,
