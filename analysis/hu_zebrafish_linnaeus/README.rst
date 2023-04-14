@@ -1,17 +1,20 @@
-Reproducing the zebrafish analysis
-==================================
-The analysis of the zebrafish data is a two-step process; the first step is the calculation of transition matrices using
-moslin, and the second is the downstream analysis of these transition matrices.
+Zebrafish analysis
+===============
 
-We provide `code <https://github.com/theislab/moslin/blob/analysis/simulations/analysis/hu_zebrafish_linnaeus/run_sbatch_hu_moslin.py>`_
-to obtain the couplings between hearts at consecutive time points on a SLURM based cluster scheduling system.
-The input data files can be found on figshare: `scRNA-seq <https://figshare.com/account/projects/163357/articles/22494529>`_
-and `lineage data <https://figshare.com/account/projects/163357/articles/22494541>`_.
-Calling the command ``python3 run_sbatch_hu_moslin.py`` will instantiate sbatch calls to calculate all couplings.
-The output of each coupling is saved as a csv files under ``DATA_DIR/output/``.
+The analysis of the zebrafish data is a two-step process:
 
-Downstream analysis can now be done through
-`this script <https://github.com/theislab/moslin/blob/main/analysis/hu_zebrafish_linnaeus/Zebrafish_coupling_analysis.R>`_.
-Apart from the couplings generated in the previous step, the downstream analysis additionally uses data files for
-single-cell annotation, cell type colors, lineage information and sample timepoints found
-`here <https://figshare.com/account/projects/163357/articles/22502974>`_.
+1. Calculation of transition matrices using moslin.
+2. Downstream analysis of the transition matrices.
+
+The input data files can be found on  `figshare <https://doi.org/10.6084/m9.figshare.c.6533377.v1>`_: ``adata`` file with the scRNA-seq data under ``Zebrafish heart regeneration`` and the lineage data as a ``.pkl`` file at ``Zebrafish reconstructed trees``.
+
+File description
+----------------
+.. csv-table::
+    :header: "File", "What it does"
+    :delim: |
+
+    run_hu_moslin.sh | Helper script used by ``run_sbatch_hu_moslin.py``. Calls the relevant functions from `utils.py` to run the simulations and performance analysis.
+    run_sbatch_hu_moslin.py | Main SLURM script to calculate the couplings between the hearts at consecutive time points. Calling the command ``python3 run_sbatch_hu_moslin.py`` will instantiate sbatch calls to calculate all couplings. The output of each coupling is saved as a ``.csv`` file under ``data/hu_zabrafish_linnaeus/output/``.
+    hu_moslin_fit_couplings.py | Main function called by ``run_hu_moslin.sh``. ``fit_couplings_all()`` is used to compute the couplings between all hearts at consecutive time points for the given input arguments (`alpha`, `epsilon`, `beta`, and `tau_a`). The couplings are saved as ``.csv`` files under ``DATA_DIR/output/``.
+    Zebrafish_coupling_analysis.R | Downstream analysis script. Apart from the couplings generated in the previous step, the downstream analysis additionally uses data files for single-cell annotation, cell type colors, lineage information and sample timepoints found `here <https://figshare.com/account/projects/163357/articles/22502974>`_.
