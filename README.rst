@@ -12,7 +12,7 @@ moslin's key applications
 -------------------------
 - Probabilistically map cells across time points in lineage-traced single-cell RNA-sequencing (scRNA-seq) studies.
 - Infer ancestors and descendants of rare or transient cell types or states.
-- Combine with  `CellRank <https://cellrank.org>` to compute putative driver genes, expression trends, activation cascades, and much more.
+- Combine with  `CellRank <https://cellrank.org>`_ to compute putative driver genes, expression trends, activation cascades, and much more.
 
 The moslin algorithm
 --------------------
@@ -31,7 +31,7 @@ identity of putative ancestor states, samples need to be related from early to l
 In our setting, each individual corresponds to a different time point, and we wish to relate cells across time to infer precise differentiation trajectories ([Forrow and Schiebinger, Nature Comms 2021](https://doi.org/10.1038/s41467-021-25133-1)). While gene expression is directly comparable across time points, lineage information is not: individual lineage trees may be reconstructed at each time point ([Alemany et al., Nature 2018](https://doi.org/10.1038/nature25969), [Raj et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4103), [Spanjaard et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4124), [Jones et al., Genome Biology 2020](https://doi.org/10.1186/s13059-020-02000-8)), but these do not uncover the molecular identity of putative ancestors or descendants.
 
 .. figure:: images/moslin_concept.jpg
-   :width: 700px
+   :width: 800px
    :alt: moslin combines gene expression with lineage information in a Fused Gromov-Wasserstein objective function.
    :align: center
    :figclass: center
