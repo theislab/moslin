@@ -4,20 +4,15 @@ Mapping lineage-traced cells across time points with moslin
     :width: 400px
     :align: center
 
-<style>
-    .center {
-        display: flex;
-        justify-content: center;
-    }
-</style>
+.. figure:: images/moslin_motivation.jpg
+   :width: 400px
+   :alt: Mapping cells across time points recovers differentiation trajectories. 
+   :align: center
+   :figclass: center
 
-<div class="center">
-    <img src="images/moslin_motivation.jpg" alt="Alternative text for the image" width="400px">
-</div>
+   moslin is an algorithm to map lineage-traced single cells across time points. Our algorithm combines gene expression with lineage information at all time points to reconstruct precise differentiation trajectories in complex biological systems.
 
 
-moslin is an algorithm to map lineage-traced single cells across time points. Our algorithm combines gene expression with lineage
-information at all time points to reconstruct precise differentiation trajectories in complex biological systems.
 
 moslin's key applications
 -------------------------
