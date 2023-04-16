@@ -1,8 +1,11 @@
 Mapping lineage-traced cells across time points with moslin
 ===========================================================
-.. image:: https://raw.githubusercontent.com/theislab/cellrank/master/docs/source/_static/img/cellrank_overview.png
+.. image:: images/moslin_motivation.jpg
     :width: 600px
     :align: center
+
+https://github.com/theislab/moslin/blob/main/images/moslin_concept.jpg
+
 
 moslin is an algorithm to map lineage-traced single cells across time points. Our algorithm combines gene expression with lineage
 information at all time points to reconstruct precise differentiation trajectories in complex biological systems.
