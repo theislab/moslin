@@ -16,7 +16,7 @@ moslin's key applications
 
 The moslin algorithm
 --------------------
-High-diversity lineage relationships can be recorded using evolving barcoding systems ([Wagner and Klein, Nat Rev Genet 2020](https://doi.org/10.1038/s41576-020-0223-2));
+High-diversity lineage relationships can be recorded using evolving barcoding systems (`Wagner and Klein, Nat Rev Genet 2020 <https://doi.org/10.1038/s41576-020-0223-2>`_;
 when applied in-vivo, these record independent lineage relationships in each individual. To infer the molecular
 identity of putative ancestor states, samples need to be related from early to late time points.
 
@@ -26,9 +26,10 @@ identity of putative ancestor states, samples need to be related from early to l
    :align: center
    :figclass: center
 
-   **Mapping independent clonal evolution**: evolving lineage recording systems, based on, e.g., Cas-9 induced genetic scars ([Alemany et al., Nature 2018](https://doi.org/10.1038/nature25969), [Raj et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4103), [Spanjaard et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4124)), record independent clonal evolution in each individual.
+   **Mapping independent clonal evolution**: evolving lineage recording systems, based on, e.g., Cas-9 induced genetic scars (`Alemany et al., Nature 2018 <https://doi.org/10.1038/nature25969>`_, `Raj et al., Nature Biotech 2018 <https://doi.org/10.1038/nbt.4103>`_, `Spanjaard et al., Nature Biotech 2018 <https://doi.org/10.1038/nbt.4124>`_, record independent clonal evolution in each individual.
 
-In our setting, each individual corresponds to a different time point, and we wish to relate cells across time to infer precise differentiation trajectories ([Forrow and Schiebinger, Nature Comms 2021](https://doi.org/10.1038/s41467-021-25133-1)). While gene expression is directly comparable across time points, lineage information is not: individual lineage trees may be reconstructed at each time point ([Alemany et al., Nature 2018](https://doi.org/10.1038/nature25969), [Raj et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4103), [Spanjaard et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4124), [Jones et al., Genome Biology 2020](https://doi.org/10.1186/s13059-020-02000-8)), but these do not uncover the molecular identity of putative ancestors or descendants.
+In our setting, each individual corresponds to a different time point, and we wish to relate cells across time to infer precise differentiation trajectories ( `Forrow and Schiebinger, Nature Comms 2021 <https://doi.org/10.1038/s41467-021-25133-1>`_. While gene expression is directly comparable across time points, lineage information is not: individual lineage trees may be reconstructed at each time point
+(`Alemany et al., Nature 2018 <https://doi.org/10.1038/nature25969>`_, `Raj et al., Nature Biotech 2018 <https://doi.org/10.1038/nbt.4103>`_, `Spanjaard et al., Nature Biotech 2018 <https://doi.org/10.1038/nbt.4124>`_, `Jones et al., Genome Biology 2020 <https://doi.org/10.1186/s13059-020-02000-8>`_, but these do not uncover the molecular identity of putative ancestors or descendants.
 
 .. figure:: images/moslin_concept.jpg
    :width: 800px
@@ -38,12 +39,12 @@ In our setting, each individual corresponds to a different time point, and we wi
 
    **The moslin algorithm**: the grey outline represents a simplified state manifold, dots and triangles illustrate early and late cells, respectively, and colors indicate cell states.
 
-Critically, `moslin?` uses two sources of information to map cells across time in an optimal transport (OT) formulation ([Peyré and Cuturi, arXiv 2019](http://arxiv.org/abs/1803.00567)):
+Critically, `moslin` uses two sources of information to map cells across time in an optimal transport (OT) formulation (`Peyré and Cuturi, arXiv 2019 <http://arxiv.org/abs/1803.00567>`_):
 
-- **gene expression**: directly comparable across time points, included in a Wasserstein (W)-term ([Schiebinger et al., Cell 2019](https://doi.org/10.1016/j.cell.2019.01.006)). The W-term compares individual early and late cells and seeks to minimize the distance cells travel in phenotypic space.
-- **lineage information**: not directly comparable across time points, included in a Gromov-Wasserstein (GW)-term ([Nitzan et al., Nature 2019](https://doi.org/10.1038/s41586-019-1773-3), [Peyré et al., PMLR 2016](http://proceedings.mlr.press/v48/peyre16.pdf)). The GW-term compares pairwise early and late cells and seeks to maximize lineage concordance.
+- **gene expression**: directly comparable across time points, included in a Wasserstein (W)-term (`Schiebinger et al., Cell 2019 <https://doi.org/10.1016/j.cell.2019.01.006>`_). The W-term compares individual early and late cells and seeks to minimize the distance cells travel in phenotypic space.
+- **lineage information**: not directly comparable across time points, included in a Gromov-Wasserstein (GW)-term (`Nitzan et al., Nature 2019 <https://doi.org/10.1038/s41586-019-1773-3>`_, `Peyré et al., PMLR 2016 <http://proceedings.mlr.press/v48/peyre16.pdf>`_). The GW-term compares pairwise early and late cells and seeks to maximize lineage concordance.
 
- We combine both sources of information in a Fused Gromov-Wasserstein (FGW) problem ([Vayer et al., Algorithms 2020](https://doi.org/10.3390/a13090212)), a type of OT-problem. Additionally, we use entropic regularization ([Cuturi 2013](https://proceedings.neurips.cc/paper/2013/hash/af21d0c97db2e27e13572cbf59eb343d-Abstract.html)) to speed up computations and to improve the statistical properties of the solution ([Peyré and Cuturi, arXiv 2019](http://arxiv.org/abs/1803.00567)).
+ We combine both sources of information in a Fused Gromov-Wasserstein (FGW) problem (`Vayer et al., Algorithms 2020 <https://doi.org/10.3390/a13090212>`_), a type of OT-problem. Additionally, we use entropic regularization (`Cuturi 2013 <https://proceedings.neurips.cc/paper/2013/hash/af21d0c97db2e27e13572cbf59eb343d-Abstract.html>`_) to speed up computations and to improve the statistical properties of the solution (`Peyré and Cuturi, arXiv 2019 <http://arxiv.org/abs/1803.00567>`_).
 
 Code, tutorials and data
 -------------------------
