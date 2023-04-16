@@ -1,5 +1,16 @@
 Mapping lineage-traced cells across time points with moslin
 ===========================================================
+.. image:: https://raw.githubusercontent.com/theislab/cellrank/master/docs/source/_static/img/cellrank_overview.png
+    :width: 600px
+    :align: center
+
+moslin is an algorithm to map lineage-traced single cells across time points. Our algorithm combines gene expression with lineage
+information at all time points to reconstruct precise differentiation trajectories in complex biological systems.
+
+moslin's key applications
+-------------------------
+- XXX
+
 Please open an `issue <https://github.com/theislab/moslin/issues/new>`_ should you experience difficulties reproducing any result.
 
 Code, tutorials and data
@@ -8,7 +19,7 @@ Under the hood,
 moslin is based on `moscot`_ to solve the optimal transport problem of mapping
 lineage-traced cells across time points. Specifically, we implement moslin via the
 `LineageClass`_ , we demonstrate a use case in our `tutorial`_ and we showcase
-how to work with `tree distances`_ in an example. Downstream analysis, like 
+how to work with `tree distances`_ in an example. Downstream analysis, like
 `visualizing`_ the inferred cell-cell transitions, is available via moscot's API.
 
 Raw published data is available from the Gene Expression Omnibus (GEO) under accession codes:
