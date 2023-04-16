@@ -12,7 +12,7 @@ moslin's key applications
 -------------------------
 - Probabilistically map cells across time points in lineage-traced single-cell RNA-sequencing (scRNA-seq) studies.
 - Infer ancestors and descendants of rare or transient cell types or states.
-- Combine with [CellRank](https://cellrank.org) to compute putative driver genes, expression trends, activation cascades, and much more.
+- Combine with  `CellRank <https://cellrank.org>` to compute putative driver genes, expression trends, activation cascades, and much more.
 
 The moslin algorithm
 --------------------
@@ -31,7 +31,7 @@ identity of putative ancestor states, samples need to be related from early to l
 In our setting, each individual corresponds to a different time point, and we wish to relate cells across time to infer precise differentiation trajectories ([Forrow and Schiebinger, Nature Comms 2021](https://doi.org/10.1038/s41467-021-25133-1)). While gene expression is directly comparable across time points, lineage information is not: individual lineage trees may be reconstructed at each time point ([Alemany et al., Nature 2018](https://doi.org/10.1038/nature25969), [Raj et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4103), [Spanjaard et al., Nature Biotech 2018](https://doi.org/10.1038/nbt.4124), [Jones et al., Genome Biology 2020](https://doi.org/10.1186/s13059-020-02000-8)), but these do not uncover the molecular identity of putative ancestors or descendants.
 
 .. figure:: images/moslin_concept.jpg
-   :width: 400px
+   :width: 700px
    :alt: moslin combines gene expression with lineage information in a Fused Gromov-Wasserstein objective function.
    :align: center
    :figclass: center
@@ -43,7 +43,7 @@ Critically, `moslin?` uses two sources of information to map cells across time i
 - **gene expression**: directly comparable across time points, included in a Wasserstein (W)-term ([Schiebinger et al., Cell 2019](https://doi.org/10.1016/j.cell.2019.01.006)). The W-term compares individual early and late cells and seeks to minimize the distance cells travel in phenotypic space.
 - **lineage information**: not directly comparable across time points, included in a Gromov-Wasserstein (GW)-term ([Nitzan et al., Nature 2019](https://doi.org/10.1038/s41586-019-1773-3), [Peyré et al., PMLR 2016](http://proceedings.mlr.press/v48/peyre16.pdf)). The GW-term compares pairwise early and late cells and seeks to maximize lineage concordance.
 
- We combine both sources of information in a Fused Gromov-Wasserstein (FGW) problem ([Vayer et al., Algorithms 2020](https://doi.org/10.3390/a13090212)), a type of OT-problem. Additionally, we use entropic regularization ([Cuturi 2013](https://proceedings.neurips.cc/paper/2013/hash/af21d0c97db2e27e13572cbf59eb343d-Abstract.html)) to speed up computations and to improve the statistical properties of the solution ([Peyré and Cuturi, arXiv 2019](http://arxiv.org/abs/1803.00567)). 
+ We combine both sources of information in a Fused Gromov-Wasserstein (FGW) problem ([Vayer et al., Algorithms 2020](https://doi.org/10.3390/a13090212)), a type of OT-problem. Additionally, we use entropic regularization ([Cuturi 2013](https://proceedings.neurips.cc/paper/2013/hash/af21d0c97db2e27e13572cbf59eb343d-Abstract.html)) to speed up computations and to improve the statistical properties of the solution ([Peyré and Cuturi, arXiv 2019](http://arxiv.org/abs/1803.00567)).
 
 Code, tutorials and data
 -------------------------
