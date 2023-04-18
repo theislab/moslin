@@ -6,13 +6,17 @@ Mapping lineage-traced cells across time points with moslin
    :align: center
    :figclass: center
 
-   `moslin` is an algorithm to map lineage-traced single cells across time points. Our algorithm combines gene expression with lineage information at all time points to reconstruct precise differentiation trajectories in complex biological systems. See the `tutorial`_ to learn more.
+   `moslin` is an algorithm to map lineage-traced single cells across time points. Our algorithm combines gene expression with lineage information at all time points to reconstruct precise differentiation trajectories in complex biological systems. See the `tutorial`_ or read the `preprint`_ learn more.
 
 moslin's key applications
 -------------------------
 - Probabilistically map cells across time points in lineage-traced single-cell RNA-sequencing (scRNA-seq) studies.
 - Infer ancestors and descendants of rare or transient cell types or states.
 - Combine with  `CellRank <https://cellrank.org>`_ to compute putative driver genes, expression trends, activation cascades, and much more.
+
+Manuscript
+----------
+Our manuscript is available as a `preprint`_ on bioRxiv. 
 
 The moslin algorithm
 --------------------
@@ -82,14 +86,14 @@ Results
     Zebrafish heart regeneration (Fig. 4), `analysis/hu_zebrafish_linnaeus/ <analysis/hu_zebrafish_linnaeus/>`__
 
 
-The concept figures in this README have been created with BioRender. 
+The concept figures in this README have been created with BioRender.
 
 
 .. _moscot: https://moscot-tools.org/
+.. _preprint: https://www.biorxiv.org/content/10.1101/2023.04.14.536867v1
 .. _LineageClass: https://moscot.readthedocs.io/en/latest/genapi/moscot.problems.time.LineageProblem.html
 .. _tree distances: https://moscot.readthedocs.io/en/latest/notebooks/examples/problems/600_leaf_distance.html
 .. _tutorial: https://moscot.readthedocs.io/en/latest/notebooks/tutorials/100_lineage.html
-.. _downstream analysis:
 .. _LineageOT: https://doi.org/10.1038/s41467-021-25133-1
 .. _TedSim: https://doi.org/10.1093/nar/gkac235
 .. _c elegans: https://doi.org/10.1126/science.aax1971
