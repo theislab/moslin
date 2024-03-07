@@ -1,0 +1,24 @@
+# config.yaml
+method: grid
+name: lot
+metric:
+  goal: minimize
+  name: mean_error
+
+parameters:
+
+# define constants
+  kind: 
+    value: lot
+  scale_cost:
+    value: mean
+  tau_a:
+    value: 1.0
+  
+  # define the grid
+  tp:
+    values: [[170, 210], [210, 270], [270, 330], [330, 390], [390, 450], [450, 510]]
+  epsilon:
+    values: [0.001, 0.01, 0.05, 0.1, 0.5]
+  lineage_info:
+    values: ["precise", "abpxp"]
