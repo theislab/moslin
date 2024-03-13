@@ -10,11 +10,11 @@ themselves.
 File description
 ----------------
 .. csv-table::
-    :header: "File", "What it does"
+    :header: "File/Folder", "What it does"
     :delim: |
 
     ``run_gridsearch`` | Benchmark moslin, pure Gromow-Wasserstein, pure OT and `LineageOT`_ across a grid of hyperparameters using `wandb`_. The gridsearch parameters are specified in ``moslin.yml`` and ``lot.yml`` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in ``utils.py``.
-    ``ML_2024-03-11_explore_c_elegans.ipynb`` | Visualize the two data subsets employed in the manuscript, all cells with precise lineage information and the ABpxp lineage.
+    ``ML_2024-03-11_explore_c_elegans.ipynb`` | Visualize the two data subsets employed in the manuscript: all cells with precise lineage information and the ABpxp lineage.
     ``ML_2024-03-11_prepare_data.ipynb`` | Clean up provided metadata, add TF annotations, aggregate clusters and assign custom colors.
     ``ML_2023-03-11_celegans_bar.ipynb`` | Visualize the benchmark results in terms of the mean error.
     ``ML_2024-03-12_GW_performance.ipynb`` | Show that pure GW performs better on precise lineage information when initialized with the OT solution. 
