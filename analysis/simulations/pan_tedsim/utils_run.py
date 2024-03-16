@@ -13,7 +13,15 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, Union
 import lineageot.core as lot_core
 import lineageot.evaluation as lot_eval
 import lineageot.inference as lot_inf
-import moscot
+
+from ott.geometry import geometry
+import cospar as cs
+
+from ott.problems.linear import linear_problem
+from ott.problems.quadratic import quadratic_problem
+from ott.solvers.quadratic import gromov_wasserstein
+from ott.solvers.linear import sinkhorn
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -23,10 +31,10 @@ from Bio import Phylo
 from jax import numpy as jnp
 from scipy.sparse import issparse
 from sklearn.metrics.pairwise import euclidean_distances
+from sklearn import cluster
 
 CASETTE_SIZE = 4
 N_CASETTES = 8
-
 
 logger = getLogger()
 
@@ -38,7 +46,7 @@ def get_cassettes() -> List[int]:
 
 
 def silence_cassettes(
-    character_array: np.ndarray, silencing_rate: float, missing_state: int = -1
+        character_array: np.ndarray, silencing_rate: float, missing_state: int = -1
 ) -> np.ndarray:
     updated_character_array = character_array.copy()
     cassettes = get_cassettes()
@@ -55,9 +63,9 @@ def silence_cassettes(
 
 
 def stochastic_silencing(
-    barcodes: np.ndarray,
-    stochastic_silencing_rate: float = 1e-2,
-    stochastic_missing_data_state: int = -1,
+        barcodes: np.ndarray,
+        stochastic_silencing_rate: float = 1e-2,
+        stochastic_missing_data_state: int = -1,
 ) -> np.ndarray:
     assert 0 <= stochastic_silencing_rate <= 1.0, stochastic_silencing_rate
     barcodes_ss = np.zeros(barcodes.shape)
@@ -68,60 +76,147 @@ def stochastic_silencing(
     return barcodes_ss
 
 
-def run_moscot(
-    edist: Optional[jnp.ndarray] = None,
-    ldist: Optional[jnp.ndarray] = None,
-    rna_dist: Optional[jnp.ndarray] = None,
-    alpha: float = 0,
-    epsilon: Optional[float] = None,
-    rank: int = -1,
-    scale_cost: Optional[Literal["mean", "max_cost"]] = "max_cost",
-    **kwargs: Any,
-) -> Tuple[np.ndarray, bool]:
-    if alpha == 0:
-        solver = moscot.backends.ott.SinkhornSolver(rank=rank)
-        ot_prob = solver(
-            xy=rna_dist,
-            tags={"xy": "cost"},
-            epsilon=epsilon,
-            scale_cost=scale_cost,
-            **kwargs,
-        )
-    elif alpha == 1:
-        solver = moscot.backends.ott.GWSolver(epsilon=epsilon, rank=rank)
-        ot_prob = solver(
-            x=edist,
-            y=ldist,
-            tags={"x": "cost", "y": "cost"},
-            epsilon=epsilon,
-            scale_cost=scale_cost,
-            **kwargs,
-        )
+def run_cospar(adata, info, barcode_arrays, sample_times, couplings, seed, data_path = None):
+    if data_path:
+        cs.settings.data_path = f"data_{seed}_{data_path}"
     else:
-        solver = moscot.backends.ott.FGWSolver(epsilon=epsilon, rank=rank)
-        ot_prob = solver(
-            xy=rna_dist,
-            x=edist,
-            y=ldist,
-            tags={"xy": "cost", "x": "cost", "y": "cost"},
-            epsilon=epsilon,
-            alpha=alpha,
-            scale_cost=scale_cost,
-            **kwargs,
+        cs.settings.data_path = f"data_{seed}"
+
+    if info == "state-only":
+        adata_orig = cs.pp.initialize_adata_object(adata)
+        adata_res = cs.tmap.infer_Tmap_from_state_info_alone(
+            adata_orig,
+            compute_new=True,
+            max_iter_N=[20, 20],
+            epsilon_converge=[0.01, 0.01],
+            smooth_array=[20, 15, 10, 5],
+            sparsity_threshold=0.1,
+            trunca_threshold=[0.001, 0.001]
         )
 
-    return ot_prob.transport_matrix, ot_prob.converged
+    else:
+        clone_coupling = couplings["true"].copy()
+
+        if info == "fitted-tree":
+            ladata = AnnData(
+                adata[adata.obs["time_info"] == 1].X.copy(), obsm={"barcodes": barcode_arrays["late"]}, dtype=np.float64
+            )
+            fitted_tree = lot_core.fit_tree(ladata, sample_times["late"])
+            lot_inf.add_node_times_from_division_times(fitted_tree)
+            lot_inf.add_nodes_at_time(fitted_tree, sample_times["early"])
+            clone_coupling = fitted_couplings(fitted_tree)
+
+        elif info == "barcodes-distance":
+            ldist = lot_inf.barcode_distances(barcode_arrays["late"])
+            ldist[np.isnan(ldist)] = np.nanmax(ldist)
+            clustering = cluster.AgglomerativeClustering(n_clusters=clone_coupling.shape[0])
+            clustering.fit(ldist)
+            clone_coupling = np.zeros(clone_coupling.shape)
+            clone_coupling[clustering.labels_, np.arange(clone_coupling.shape[1])] = 1
+
+        num_early = len(adata[adata.obs["time_info"] == 0].obs_names)
+        num_clones = clone_coupling.shape[0]
+
+        adata.obsm["X_clone"] = np.array(np.zeros((adata.n_obs, num_clones)), dtype="bool")
+
+        clone_coupling[clone_coupling > 0] = 1
+        adata.obsm["X_clone"][num_early:, :] = np.array(clone_coupling.T, dtype="bool")
+
+        adata_orig = cs.pp.initialize_adata_object(adata)
+        adata_res = cs.tmap.infer_Tmap_from_one_time_clones(
+            adata_orig,
+            initial_time_points=[0],
+            later_time_point=[1],
+            compute_new=True,
+            max_iter_N=[20, 20],
+            epsilon_converge=[0.01, 0.01],
+            initialize_method="OT",
+            OT_cost="GED",
+            smooth_array=[20, 15, 10, 5],
+            sparsity_threshold=0.1,
+            trunca_threshold=[0.001, 0.001]
+        )
+
+    return adata_res.uns["transition_map"].A
+
+
+def run_moslin(
+        edist: np.ndarray,
+        ldist: np.ndarray,
+        rna_dist: np.ndarray,
+        epsilon: float,
+        alpha: float,
+    scale_cost:str
+):
+    # Compute cost matrices for `cost_matrices_key`
+
+    if alpha == 0:
+        geom_xy = geometry.Geometry(
+            cost_matrix=rna_dist,
+            scale_cost=scale_cost,
+            epsilon=epsilon,
+        )
+        ot_prob = linear_problem.LinearProblem(geom_xy)
+        solver = sinkhorn.Sinkhorn()
+        # Solve OT problem
+        lp = solver(ot_prob)
+    elif alpha == 1:
+        geom_xx = geometry.Geometry(
+            cost_matrix=edist,
+            scale_cost=scale_cost,
+            epsilon=epsilon,
+        )
+        geom_yy = geometry.Geometry(
+            cost_matrix=ldist,
+            scale_cost=scale_cost,
+            epsilon=epsilon,
+        )
+        prob = quadratic_problem.QuadraticProblem(
+            geom_xx,
+            geom_yy,
+        )
+        solver = gromov_wasserstein.GromovWasserstein(epsilon=epsilon, max_iterations=1000)
+        lp = solver(prob)
+    else:
+        fused_penalty = (1 - alpha) / alpha
+
+        geom_xy = geometry.Geometry(
+            cost_matrix=rna_dist,
+            scale_cost=scale_cost,
+            epsilon=epsilon,
+        )
+
+        geom_xx = geometry.Geometry(
+            cost_matrix=edist,
+            scale_cost=scale_cost,
+            epsilon=epsilon,
+        )
+        geom_yy = geometry.Geometry(
+            cost_matrix=ldist,
+            scale_cost=scale_cost,
+            epsilon=epsilon,
+        )
+        prob = quadratic_problem.QuadraticProblem(
+            geom_xx=geom_xx,
+            geom_yy=geom_yy,
+            geom_xy=geom_xy,
+            fused_penalty=fused_penalty
+        )
+        solver = gromov_wasserstein.GromovWasserstein(epsilon=epsilon, max_iterations=1000)
+        lp = solver(prob)
+
+    return np.array(lp.matrix), lp.converged
 
 
 def run_lot(
-    barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
-    rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
-    sample_times: Mapping[Literal["early", "late"], float],
-    *,
-    tree: Optional[nx.DiGraph] = None,
-    epsilon: float = 0.05,
-    normalize_cost: bool = True,
-    **kwargs: Any,
+        barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        sample_times: Mapping[Literal["early", "late"], float],
+        *,
+        tree: Optional[nx.DiGraph] = None,
+        epsilon: float = 0.05,
+        normalize_cost: bool = True,
+        **kwargs: Any,
 ) -> Tuple[np.ndarray, bool]:
     """Fits a LineageOT coupling between the cells at time_1 and time_2.
 
@@ -182,22 +277,22 @@ def run_lot(
     coupling = coupling.X.astype(np.float64)
     conv = not [w for w in ws if "did not converge" in str(w.message)]
 
-    return coupling, conv and np.all(np.isfinite(coupling)), tree
+    return coupling, conv and np.all(np.isfinite(coupling))
 
 
 def process_data(
-    rna_arrays: Mapping[Literal["early", "late"], np.ndim],
-    *,
-    n_pcs: int = 30,
-    pca: bool = True,
+        rna_arrays: Mapping[Literal["early", "late"], np.ndim],
+        *,
+        n_pcs: int = 30,
+        lognorm: bool = True,
+        pca: bool = True,
 ) -> np.ndarray:
-    adata = AnnData(rna_arrays["early"], dtype=float).concatenate(
-        AnnData(rna_arrays["late"], dtype=float),
-        batch_key="time",
-        batch_categories=["0", "1"],
-    )
-    sc.pp.normalize_total(adata, target_sum=1e4)
-    sc.pp.log1p(adata)
+    adata_early = AnnData(rna_arrays["early"], dtype=float)
+    adata_late = AnnData(rna_arrays["late"], dtype=float)
+    adata = sc.concat([adata_early, adata_late], label="time", keys=["0", "1"])
+    if lognorm:
+        sc.pp.normalize_total(adata, target_sum=1e4)
+        sc.pp.log1p(adata)
     if pca:
         sc.pp.highly_variable_genes(adata)
         sc.tl.pca(adata, use_highly_variable=False)
@@ -208,12 +303,12 @@ def process_data(
 
 
 def compute_dists(
-    tree_type: Literal["gt", "bc"],
-    trees: Mapping[Literal["early", "late"], nx.DiGraph],
-    rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
-    barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
-    dist_cache: Optional[Path] = None,
-    scale: bool = False,
+        tree_type: Literal["gt", "bc"],
+        trees: Mapping[Literal["early", "late"], nx.DiGraph],
+        rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        dist_cache: Optional[Path] = None,
+        scale: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute distances for time_1, time_2 and joint.
@@ -314,10 +409,10 @@ def newick2digraph(tree: str) -> nx.DiGraph:
 
 
 def annotate(
-    G: nx.DiGraph,
-    cell_arr_data: List[lot_inf.sim.Cell],
-    meta: List[Dict[str, Any]],
-    ttp: int = 100,
+        G: nx.DiGraph,
+        cell_arr_data: List[lot_inf.sim.Cell],
+        meta: List[Dict[str, Any]],
+        ttp: int = 100,
 ) -> nx.DiGraph:
     G = G.copy()
     n_leaves = len([n for n in G.nodes if not len(list(G.successors(n)))])
@@ -407,17 +502,17 @@ def is_valid_edge(n1: Dict[str, Any], n2: Dict[str, Any]) -> bool:
 
 
 def build_true_trees(
-    rna: np.ndarray,
-    barcodes: np.ndarray,
-    meta: pd.DataFrame,
-    *,
-    tree: str,
-    depth: int,
-    max_depth: Optional[int] = None,
-    n_pcs: int = 30,
-    pca: bool = True,
-    ttp: float = 100.0,
-) -> Dict[Literal["early", "late"], nx.DiGraph]:
+        rna: np.ndarray,
+        barcodes: np.ndarray,
+        meta: pd.DataFrame,
+        *,
+        tree: str,
+        depth: int,
+        max_depth: Optional[int] = None,
+        n_pcs: int = 30,
+        pca: bool = True,
+        lognorm: bool = True,
+        ttp: float = 100.0):
     cell_arr_adata = [
         lot_inf.sim.Cell(rna[nid], barcodes[nid]) for nid in range(rna.shape[0])
     ]
@@ -444,7 +539,7 @@ def build_true_trees(
         for kind in ["early", "late"]
     }
 
-    data = process_data(rna_arrays, n_pcs=n_pcs, pca=pca)
+    data = process_data(rna_arrays, n_pcs=n_pcs, pca=pca, lognorm=lognorm)
 
     n_early_leaves = len([n for n in trees["early"] if is_leaf(trees["early"], n)])
     data_early, data_late = data[:n_early_leaves], data[n_early_leaves:]
@@ -458,20 +553,22 @@ def build_true_trees(
             else:
                 G.nodes[n]["cell"].x = np.full((n_pcs,), np.nan)
 
-    return trees
+    return trees, rna_arrays
 
 
 def prepare_data(
-    fpath: Path,
-    *,
-    depth: int,
-    max_depth: Optional[int] = None,
-    ssr: Optional[float] = None,
-    n_pcs: int = 30,
-    pca: bool = True,
-    ttp: float = 100.0,
+        fpath: Path,
+        *,
+        depth: int,
+        max_depth: Optional[int] = None,
+        ssr: Optional[float] = None,
+        n_pcs: int = 30,
+        pca: bool = True,
+        lognorm: bool = True,
+        ttp: float = 100.0,
 ) -> Tuple[
     Dict[Literal["early", "late"], nx.DiGraph],
+    Dict[Literal["early", "late"], np.ndarray],
     Dict[Literal["early", "late"], np.ndarray],
     Dict[Literal["early", "late"], np.ndarray],
 ]:
@@ -482,7 +579,7 @@ def prepare_data(
 
     if ssr is not None:
         barcodes = stochastic_silencing(barcodes, stochastic_silencing_rate=ssr)
-    true_trees = build_true_trees(
+    true_trees, rna_arrays = build_true_trees(
         rna,
         barcodes,
         meta=adata.obs,
@@ -491,13 +588,15 @@ def prepare_data(
         max_depth=max_depth,
         n_pcs=n_pcs,
         pca=pca,
-        ttp=ttp,
+        lognorm=lognorm,
+        ttp=ttp
     )
     data_arrays = {
         "late": lot_inf.extract_data_arrays(true_trees["late"]),
         "early": lot_inf.extract_data_arrays(true_trees["early"]),
     }
-    rna_arrays = {
+
+    processed_rna_arrays = {
         "early": data_arrays["early"][0],
         "late": data_arrays["late"][0],
     }
@@ -506,15 +605,16 @@ def prepare_data(
         "late": data_arrays["late"][1],
     }
 
-    return true_trees, rna_arrays, barcode_arrays
+    return true_trees, rna_arrays, processed_rna_arrays, barcode_arrays
 
 
 def evaluate_coupling(
-    pred_coupling: Union[np.ndarray, jnp.ndarray],
-    true_trees: Mapping[Literal["early", "late"], nx.DiGraph],
-    rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        pred_coupling: Union[np.ndarray, jnp.ndarray],
+        couplings: Dict,
+        dists: Dict,
+        gt_ecost: float,
+        gt_lcost: float
 ) -> Tuple[float, float]:
-    couplings, dists, gt_ecost, gt_lcost = ground_truth(true_trees, rna_arrays)
     edist, ldist = dists["early"], dists["late"]
 
     pred_coupling = np.asarray(pred_coupling)
@@ -542,8 +642,8 @@ def evaluate_coupling(
 
 
 def ground_truth(
-    true_trees: Mapping[Literal["early", "late"], nx.DiGraph],
-    rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        true_trees: Mapping[Literal["early", "late"], nx.DiGraph],
+        rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
 ) -> Tuple[
     Dict[Literal["true", "independent"], np.ndarray],
     Dict[Literal["early", "late"], np.ndarray],
@@ -578,3 +678,38 @@ def ground_truth(
     dists = {"early": edist, "late": ldist}
 
     return couplings, dists, ecost, lcost
+
+
+def fitted_couplings(
+        fitted_tree
+):
+    cells_early = [n for n in fitted_tree.nodes if type(n) == tuple]
+    cells_late = lot_inf.get_leaves(fitted_tree, include_root=False)
+
+    fitted_coupling = np.zeros([len(cells_early), len(cells_late)])
+
+    for i, cell in enumerate(cells_early):
+        for child in nx.descendants(fitted_tree, cell):
+            if child in cells_late:
+                fitted_coupling[i, child] = 1
+
+    return fitted_coupling
+
+
+def set_adata_cospar(true_trees, rna_arrays, pca_arrays):
+    obs_names_early = [f"early_{leaf}" for leaf in lot_inf.get_leaves(true_trees["early"], include_root=False)]
+    obs_names_late = [f"late_{leaf}" for leaf in lot_inf.get_leaves(true_trees["late"], include_root=False)]
+    obs_names = obs_names_early + obs_names_late
+
+    X = np.concatenate(list(rna_arrays.values()))
+    adata = AnnData(X=X, dtype=X.dtype)
+    adata.obs_names = obs_names
+
+    adata.obs["time_info"] = 1
+    adata.obs["time_info"][:rna_arrays["early"].shape[0]] = 0
+    adata.obs["time"] = adata.obs["time_info"].copy().astype("category")
+
+    adata.obsm["X_pca"] = np.concatenate(list(pca_arrays.values()))
+
+    return adata
+

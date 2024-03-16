@@ -5,6 +5,7 @@ jax.config.update("jax_enable_x64", True)
 import argparse
 import copy
 import os
+import sys
 import pickle
 from typing import Dict, List, Literal, Optional
 
@@ -23,6 +24,13 @@ from ott.geometry import geometry, pointcloud
 from ott.problems.quadratic import quadratic_problem
 from ott.solvers.quadratic import gromov_wasserstein
 
+from scipy.sparse import issparse
+
+import cospar as cs
+
+sys.path.insert(
+    0, "../../../"
+)
 from paths import DATA_DIR, FIG_DIR
 
 DATA_DIR = DATA_DIR / "simulations/forrow_2gene"
@@ -39,7 +47,11 @@ method_colors = {
     "GW": "#117733",
     "OT": "#88CCEE",
     "LineageOT": "#40B0A6",
+    "Cospar": "#A640B0",
+    "Cospar (state-only)": "#4b55be",
 }
+
+state_cospar_key = "state-info"
 
 
 def run_seeds(
@@ -76,19 +88,19 @@ def simulate_seeds(
     if seeds is None:
         seeds = [
             4698.0,
-            12102.,
-            23860.,
-            25295.,
-            30139.,
-            36489.,
-            38128.,
-            48022.,
-            49142.,
-            59706.
+            12102.0,
+            23860.0,
+            25295.0,
+            30139.0,
+            36489.0,
+            38128.0,
+            48022.0,
+            49142.0,
+            59706.0,
         ]
     sim_dicts = {}
     for seed in seeds:
-        sim_dicts[seed] = simulate_data(flow_type, seed=int(seed), save=save)
+        sim_dicts[seed] = simulate_data(flow_type=flow_type, seed=int(seed), save=save)
 
     adatas = {}
     for key, sim_dict in sim_dicts.items():
@@ -108,6 +120,7 @@ def fit_seeds(
     cost_keys: Optional[List] = None,
     return_res: bool = True,
     verbose: bool = True,
+    save: bool = True,
 ):
     if epsilons is None:
         epsilons = np.logspace(-4, 1, 15)
@@ -122,23 +135,6 @@ def fit_seeds(
             f"evaluating {flow_type} over {len(epsilons)} epsilons and {len(alphas)} alphas."
         )
 
-    lot_couplings = {}
-    for key, sim_dict in sim_dicts.items():
-        lot_couplings[key] = {}
-        lot_couplings[key]["true"], lot_couplings[key]["fitted"] = fit_lineageOT(
-            epsilons=epsilons, **sim_dict
-        )
-    moslin_couplings = {}
-    for seed, sim_dict in sim_dicts.items():
-        moslin_couplings[seed] = {}
-        for key in cost_keys:
-            moslin_couplings[seed][key] = fit_moslin(
-                adatas[seed],
-                epsilons,
-                alphas,
-                joint_full=True,  # if key=="true" else True,
-                cost_matrices_key=key,
-            )
     ot_couplings = {}
     for seed, sim_dict in sim_dicts.items():
         ot_couplings[seed] = fit_moslin_ot(adatas[seed], epsilons, joint_full=True)
@@ -156,38 +152,8 @@ def fit_seeds(
     # independent couplings
     for seed, sim_dict in sim_dicts.items():
         sim_dicts[seed] = independent_coupling(sim_dict)
-
-    # lot
-    ancestor_errors_lot = {}
-    for seed, couplings_seed in lot_couplings.items():
-        ancestor_errors_lot[seed] = {}
-        for key, couplings in couplings_seed.items():
-            ancestor_errors_lot[seed][key] = get_metrics(
-                couplings,
-                lambda x: sim_inf.OT_cost(x, sim_dicts[seed]["rna_cost"]["early"]),
-                scale=sim_dicts[seed]["independent_ancestor_error"],
-                return_dict=False,
-            )
-
-    descendant_errors_lot = {}
-    for seed, couplings_seed in lot_couplings.items():
-        descendant_errors_lot[seed] = {}
-        for key, couplings in couplings_seed.items():
-            descendant_errors_lot[seed][key] = get_metrics(
-                couplings,
-                lambda x: sim_inf.OT_cost(
-                    sim_eval.expand_coupling(
-                        x,
-                        sim_dicts[seed]["couplings"]["true"],
-                        sim_dicts[seed]["rna_cost"]["late"],
-                    ),
-                    sim_dicts[seed]["rna_cost"]["late"],
-                ),
-                scale=sim_dicts[seed]["independent_descendant_error"],
-                return_dict=False,
-            )
-
-    # moslin
+            
+    # moslin-OT
     ancestor_errors_ot = {}
 
     for seed, couplings_seed in ot_couplings.items():
@@ -214,157 +180,32 @@ def fit_seeds(
             return_dict=False,
         )
 
-    # moslin-GW
-    ancestor_errors_gw = {}
-    for seed, couplings_seed in gw_couplings.items():
-        ancestor_errors_gw[seed] = {}
-        for key, couplings in couplings_seed.items():
-            ancestor_errors_gw[seed][key] = get_metrics(
-                couplings,
-                lambda x: sim_inf.OT_cost(x, sim_dicts[seed]["rna_cost"]["early"]),
-                scale=sim_dicts[seed]["independent_ancestor_error"],
-            )
-
-    descendant_errors_gw = {}
-    for seed, couplings_seed in gw_couplings.items():
-        descendant_errors_gw[seed] = {}
-        for key, couplings in couplings_seed.items():
-            descendant_errors_gw[seed][key] = get_metrics(
-                couplings,
-                lambda x: sim_inf.OT_cost(
-                    sim_eval.expand_coupling(
-                        x,
-                        sim_dicts[seed]["couplings"]["true"],
-                        sim_dicts[seed]["rna_cost"]["late"],
-                    ),
-                    sim_dicts[seed]["rna_cost"]["late"],
-                ),
-                scale=sim_dicts[seed]["independent_descendant_error"],
-                return_dict=False,
-            )
-
-    # moslin
-    ancestor_errors_moslin = {}
-
-    for seed, couplings_seed in moslin_couplings.items():
-        ancestor_errors_moslin[seed] = {}
-        for key, moslin_couplings_type in couplings_seed.items():
-            ancestor_errors_moslin[seed][key] = {}
-            for a, coupling in moslin_couplings_type.items():
-                ancestor_errors_moslin[seed][key][a] = get_metrics(
-                    coupling,
-                    lambda x: sim_inf.OT_cost(x, sim_dicts[seed]["rna_cost"]["early"]),
-                    scale=sim_dicts[seed]["independent_ancestor_error"],
-                    return_dict=False,
-                )
-    descendant_errors_moslin = {}
-
-    for seed, couplings_seed in moslin_couplings.items():
-        descendant_errors_moslin[seed] = {}
-        for key, moslin_couplings_type in couplings_seed.items():
-            descendant_errors_moslin[seed][key] = {}
-            for a, coupling in moslin_couplings_type.items():
-                descendant_errors_moslin[seed][key][a] = get_metrics(
-                    coupling,
-                    lambda x: sim_inf.OT_cost(
-                        sim_eval.expand_coupling(
-                            x,
-                            sim_dicts[seed]["couplings"]["true"],
-                            sim_dicts[seed]["rna_cost"]["late"],
-                        ),
-                        sim_dicts[seed]["rna_cost"]["late"],
-                    ),
-                    scale=sim_dicts[seed]["independent_descendant_error"],
-                    return_dict=False,
-                )
-
-    # optimal \alpha
-    alpha_min = {}
-    for seed in ancestor_errors_moslin.keys():
-        alpha_min[seed] = {}
-        for key in cost_keys:
-            cost_min = 1
-            for a, costs in ancestor_errors_moslin[seed][key].items():
-                if np.min(costs[1]) < cost_min:
-                    cost_min = np.min(costs[1])
-                    alpha_min[seed][key] = a
-
-    df = pd.DataFrame(
-        columns=[
-            "method",
-            "seed",
-            "flow_type",
-            "tree_type",
-            "epsilon",
-            "ancestor_error",
-            "descendant_error",
-            "mean_error",
-        ]
-    )
-
-    ancestor_errors = {}
-    descendant_errors = {}
-    for seed in ancestor_errors_lot.keys():
-        ancestor_errors[seed] = {}
-        descendant_errors[seed] = {}
-        for key in cost_keys:
-            ancestor_errors[seed][key] = {
-                "LineageOT": ancestor_errors_lot[seed][key],
-                "OT": ancestor_errors_ot[seed],
-                "GW": ancestor_errors_gw[seed][key],
-                "moslin": ancestor_errors_moslin[seed][key][alpha_min[seed][key]],
-            }
-
-            descendant_errors[seed][key] = {
-                "LineageOT": descendant_errors_lot[seed][key],
-                "OT": descendant_errors_ot[seed],
-                "GW": descendant_errors_gw[seed][key],
-                "moslin": descendant_errors_moslin[seed][key][alpha_min[seed][key]],
-            }
-    methods = ["LineageOT", "OT", "GW", "moslin"]
-
-    for seed in ancestor_errors.keys():
-        for method in methods:
-            for key in cost_keys:
-                mean_err = [
-                    sum(x) / 2
-                    for x in zip(
-                        ancestor_errors[seed][key][method][1],
-                        descendant_errors[seed][key][method][1],
-                    )
-                ]
-                idx_min = np.argmin(mean_err)
-                dict_ = pd.DataFrame(
-                    {
-                        "method": method,
-                        "seed": seed,
-                        "flow_type": flow_type,
-                        "tree_type": key,
-                        "epsilon": ancestor_errors[seed][key][method][0][idx_min],
-                        "ancestor_error": ancestor_errors[seed][key][method][1][
-                            idx_min
-                        ],
-                        "descendant_error": descendant_errors[seed][key][method][1][
-                            idx_min
-                        ],
-                        "mean_error": mean_err[idx_min],
-                    },
-                    index=[1],
-                )
-                df = pd.concat((df, dict_), ignore_index=True)
-
-    df.to_csv(DATA_DIR / f"{flow_type}_res_seeds.csv")
-
-    with open(DATA_DIR / f"{flow_type}_ancestor_errors_moslin.pkl", "wb") as fout:
-        pickle.dump(ancestor_errors_moslin, fout)
-    with open(DATA_DIR / f"{flow_type}_descendant_errors_moslin.pkl", "wb") as fout:
-        pickle.dump(descendant_errors_moslin, fout)
+    if save:
+        with open(DATA_DIR / f"{flow_type}_ancestor_errors_ot.pkl", "wb") as fout:
+            pickle.dump(ancestor_errors_ot, fout)
+        with open(DATA_DIR / f"{flow_type}_descendant_errors_ot.pkl", "wb") as fout:
+            pickle.dump(descendant_errors_ot, fout)
+            
     if verbose:
         print("    Done!")
     if return_res:
-        return df, ancestor_errors_moslin, descendant_errors_moslin
-    return
+        return ancestor_errors_ot, descendant_errors_ot
+    return 
 
+def fitted_couplings(
+    fitted_trees: Dict
+):
+    cells_early = [n for n in fitted_trees["late"].nodes if type(n) == tuple]
+    cells_late = sim_inf.get_leaves(fitted_trees["late"], include_root=False)
+
+    fitted_coupling = np.zeros([len(cells_early), len(cells_late)])
+
+    for i, cell in enumerate(cells_early):
+        for child in nx.descendants(fitted_trees["late"], cell):
+            if child in cells_late:
+                fitted_coupling[i, child] = 1
+
+    return fitted_coupling
 
 def simulate_data(
     flow_type: Literal[
@@ -399,6 +240,7 @@ def simulate_data(
         mean_division_time=1.1 * timescale,
         timestep=0.001 * timescale,
     )
+    print(f"simulated: {sim_params.flow_type}")
 
     # These parameters can be adjusted freely.
     # As is, they replicate the plots in the paper for the fully convergent simulation.
@@ -497,6 +339,7 @@ def simulate_data(
             time_inference_method="least_squares",
         )
 
+    
     # True distances
     fitted_distances = {
         key: sim_inf.compute_tree_distances(fitted_trees[key]) for key in fitted_trees
@@ -523,6 +366,8 @@ def simulate_data(
     )
     rna_cost["late"] = ot.utils.dist(rna_arrays["late"], rna_arrays["late"])
 
+    couplings["fitted"] =  fitted_couplings(fitted_trees)
+    
     res = {
         "rna_arrays": rna_arrays,
         "ancestor_info": ancestor_info,
@@ -543,6 +388,76 @@ def simulate_data(
 
     return res
 
+
+def fit_cospar(
+    sim_dict: Dict,
+    flow_type: Literal[
+        "bifurcation", "convergent", "partial_convergent", "mismatched_clusters"
+    ],
+    joint_full: bool = True
+):
+    # Choosing which of the three dimensions to use
+    if flow_type == "mismatched_clusters":
+        dimensions_to_use = [1, 2]
+    else:
+        dimensions_to_use = [0, 1]
+  
+    couplings_fit = {
+        "true": sim_dict["couplings"]["true"].copy(),
+        "fitted": sim_dict["couplings"]["fitted"].copy()
+    }
+    couplings = {}
+
+    X = np.concatenate(list(sim_dict["rna_arrays"].values()))
+    X = X if joint_full else X[:, dimensions_to_use]
+    adata = anndata.AnnData(X=X, dtype=X.dtype)
+    adata.obs["time_info"] = 1
+    adata.obs["time_info"][:sim_dict["rna_arrays"]["early"].shape[0]] = 0
+    adata.obs["time"] = adata.obs["time_info"].copy().astype("category")
+    adata.obsm["X_emb"] = adata.X[:, :2].copy()
+    adata.obsm["X_pca"] = adata.X.copy()
+    
+    adata_orig = cs.pp.initialize_adata_object(adata)
+    adata_res = cs.tmap.infer_Tmap_from_state_info_alone(
+                adata_orig,
+                compute_new=True,
+                max_iter_N=[10, 10],
+                epsilon_converge=[0.01, 0.01],
+                smooth_array=[20, 15, 10, 5],
+                sparsity_threshold=0.0001,
+    )
+    
+    couplings[state_cospar_key] = adata_res.uns["transition_map"].A if issparse(adata_res.uns["transition_map"]) else adata_res.uns["transition_map"]
+
+    for key, coupling in couplings_fit.items():
+    
+        # set X_clone based on coupling
+        num_early = len(adata[adata.obs["time_info"] == 0].obs_names)
+        num_clones = coupling.shape[0]
+        adata.obsm["X_clone"] = np.array(np.zeros((adata.n_obs, num_clones)), dtype="bool")
+        coupling[coupling > 0] = 1
+        adata.obsm["X_clone"][num_early:, :] = np.array(coupling.T, dtype="bool")
+        adata.obsm["X_emb"] = adata.X[:, :2].copy()
+        adata.obsm["X_pca"] = adata.X.copy()
+
+        adata_orig = cs.pp.initialize_adata_object(adata)
+        adata_res = cs.tmap.infer_Tmap_from_one_time_clones(
+                adata_orig,
+                initial_time_points=[0],
+                later_time_point=[1],
+                compute_new=True,
+                max_iter_N=[100, 100],
+                epsilon_converge=[0.0001, 0.0001],
+                initialize_method="OT",
+                OT_cost="GED",
+                smooth_array=[20, 15, 10, 5],
+                sparsity_threshold=0.0001,
+        )
+
+        couplings[key] = adata_res.uns["transition_map"].A if issparse(adata_res.uns["transition_map"]) else adata_res.uns["transition_map"]
+  
+    return couplings
+    
 
 def fit_lineageOT(
     epsilons, rna_arrays, ancestor_info, sample_times, sim_params, true_trees, **_kwargs
@@ -603,8 +518,10 @@ def fit_moslin(
                 time_key="time",
                 joint_attr=joint_attr,
                 lineage_attr={
-                    "attr": "obsp",
-                    "key": f"cost_matrices_{cost_matrices_key}",
+                            "attr": "obsp",
+                            "key": f"cost_matrices_{cost_matrices_key}",
+                            "tag": "cost_matrix",
+                            "cost": "custom",
                 },
                 policy="sequential",
                 scale_cost="max_cost",
@@ -728,6 +645,7 @@ def anndata_from_sim(
     adata.obs["time"] = 1
     obs_early = [str(x) for x in range(sim_dict["rna_arrays"]["early"].shape[0])]
     adata.obs.loc[obs_early, "time"] = 0
+    adata.obs["time"] = adata.obs["time"].astype("category")
 
     adata.uns["true_trees"] = {}
     adata.uns["fitted_trees"] = {}
