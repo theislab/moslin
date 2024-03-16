@@ -1,10 +1,30 @@
+# Description ####
+# Analyze zebrafish transition matrices; create zebrafish heart regeneration figure and supplemental figures
+# in moslin manuscript.
+# This script requires data files found on figshare: https://figshare.com/account/projects/163357/articles/22502974
+# and moslin-computed transition matrices from run_sbatch_hu_moslin.py.
+# Transition matrices that are analysed in this script are:
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9 (default hyperparameters)
+# tmats_moslin_alpha-0.6_epsilon-0.01_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.005_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.4_epsilon-0.01_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.1_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.3_taua-0.9 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.95 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.85 (alternative hyperparameter to compare to default)
+# tmats_moslin_alpha-0.5_epsilon-0.1_beta-0.2_taua-0.9 (alternative hyperparameter to compare to default)
+# Comparison of these hyperparameters can be done in the section "Cell type-cell type persistency test".
+# Author: B. Spanjaard
+
+# Set below parameter to save figures and datafiles.
+save_output <- F
+
 # Dependencies ####
 library(data.table)
 library(ggplot2)
 library(plotROC)
 library(ggalluvial)
 
-# setwd("./Scripts/notebooks/hu_zebrafish_linnaeus/")
 tree_time <- fread("./data/hu_zebrafish_linnaeus/Tree_times")
 
 AverageFrequenciesAndTransferRatios <- function(transfer_ratios, tree_times, all_ct_combinations = NULL){
@@ -344,7 +364,6 @@ ct_freqs <- ct_freqs[time %in% c("Ctrl", "3dpi", "7dpi")]
 ct_freqs$time <- factor(ct_freqs$time, levels = c("Ctrl", "3dpi", "7dpi"))
 
 moslin_data_path <- "~/Documents/Projects/Moscot/Data/tmats_opt_moslin_csv/"
-  # "data/hu_zebrafish_linnaeus/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9/"
 moslin_files <- data.table(Moslin_filename = list.files(path = moslin_data_path))
 moslin_files <- moslin_files[, {
   filename_split <- unlist(strsplit(Moslin_filename, "_|-"))
@@ -459,6 +478,7 @@ ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
 transfer_ratios_trees <-
   fread("../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0.0_taua-0.4")
 
+
 ct_and_transfer_averages <- AverageFrequenciesAndTransferRatios(transfer_ratios = transfer_ratios_trees,
                                                                 tree_times = unique(ct_freqs[, c("Tree", "time")]))
 
@@ -509,7 +529,8 @@ ggplot(ct_freqs_ctrl_3dpi) +
 
 # Path towards transient fibroblasts ####
 freq_cutoff <- 10
-moslin_data_path <- "~/Documents/Projects/Moscot/Data/tmats_opt_moslin_csv/"
+moslin_data_path <- 
+  "data/hu_zebrafish_linnaeus/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9/"
 moslin_files <- data.table(Moslin_filename = list.files(path = moslin_data_path))
 moslin_files <- moslin_files[, {
   filename_split <- unlist(strsplit(Moslin_filename, "_|-"))
@@ -593,6 +614,7 @@ transfer_ratios_trees <- transfer_ratios
 # fwrite(transfer_ratios, "../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0.0_taua-0.4")
 transfer_ratios_trees <-
   fread("../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0.0_taua-0.4")
+
 
 ct_and_transfer_averages <- AverageFrequenciesAndTransferRatios(transfer_ratios = transfer_ratios_trees,
                                                      tree_times = tree_time)
@@ -819,13 +841,11 @@ for(i in 1:nrow(x)){
   }
 
 # Calculate confidence intervals
-
 # fwrite(bootstrapped_average_percentages,
        # "./Data/Bootstrapped_average_percentages_3-6-5_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0_taua-0.4")
 # bootstrapped_average_percentages <-
-#   fread("./Data/Bootstrapped_average_percentages_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")
+#   fread("data/hu_zebrafish_linnaeus/Bootstrapped_average_percentages_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")
 
-names(bootstrapped_average_percentages)
 bap_long <- melt(bootstrapped_average_percentages, 
                  id.vars = c("t1_time", "t2_time", "Cell_type_from", "Cell_type_to"),
                  variable.name = "Sample_type", value.name = "Percentage", variable.factor = F)
@@ -850,5 +870,7 @@ tap_ci <-
         bap_ci[Type == "to", c("t1_time", "t2_time", "Cell_type_from", "Cell_type_to", "Min_095", "Max_095")],
         all = T)
 colnames(tap_ci)[(ncol(tap_ci) - 1):ncol(tap_ci)] <- c("Perc_to_min_095", "Perc_to_max_095")
-# fwrite(tap_ci, "./Data/Bootstrapped_95_ci_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
-# tap_ci <- fread("./Data/Bootstrapped_95_ci_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")
+if(save_output){
+  fwrite(tap_ci, "data/hu_zebrafish_linnaeus/Bootstrapped_95_ci_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+}
+# tap_ci <- fread("data/hu_zebrafish_linnaeus/Bootstrapped_95_ci_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")

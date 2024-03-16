@@ -1,0 +1,23 @@
+seml:
+    executable: generate.py
+    name: tedsim_datagen
+    output_dir: experiments  # this directory must exist already
+    project_root_dir: .
+
+slurm:
+    experiments_per_job: 1
+    max_simultaneous_jobs: 10
+    sbatch_options_template: CPU
+    sbatch_options:
+        mem: 16G
+        cpus-per-task: 8
+        time: 0-12:00  # D-HH:MM
+
+fixed:
+    p_a: 0.4
+    ss: 0.4
+
+grid:
+    seed:
+        type: choice
+        options: [23860, 50349, 36489, 59707, 38128, 25295, 49142, 12102, 30139, 4698]
