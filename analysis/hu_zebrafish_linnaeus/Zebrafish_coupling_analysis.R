@@ -4,8 +4,8 @@ library(ggplot2)
 library(plotROC)
 library(ggalluvial)
 
-setwd("./Scripts/notebooks/hu_zebrafish_linnaeus/")
-tree_time <- fread("Tree_times")
+# setwd("./Scripts/notebooks/hu_zebrafish_linnaeus/")
+tree_time <- fread("./data/hu_zebrafish_linnaeus/Tree_times")
 
 AverageFrequenciesAndTransferRatios <- function(transfer_ratios, tree_times, all_ct_combinations = NULL){
   # Perform a weighted average of cell type frequencies and transfer ratios.
@@ -267,7 +267,6 @@ ReadTransitions <- function(filename, edgelist_from, edgelist_to, sep = ","){
 }
 
 ParseRunName <- function(x){
-  #x <- AUCs$Run_name[1]
   y <- unlist(strsplit(x, split = "_"))
   return(list(alpha = unlist(strsplit(y[3], split = "-"))[2], 
               epsilon = unlist(strsplit(y[4], split = "-"))[2], 
@@ -327,15 +326,15 @@ ZoomAverages <- function(ct_and_transfer_averages, ct_of_interest, ratio_cutoff 
 }
 
 # Load and prep data ####
-tree_list_in <- readRDS("~/Documents/Projects/heart_Bo/Data/Trees/Tree_list_oneEndo.rds")
+tree_list_in <- readRDS("data/hu_zebrafish_linnaeus/Tree_list.rds")
 
-annotations <- fread("~/Documents/Projects/heart_Bo/Data/final_metadata_Tmacromerged_2.csv")
+annotations <- fread("data/hu_zebrafish_linnaeus/Zebrafish_metadata.csv")
 timepoints <- unique(annotations[, c("orig.ident", "time")])
 timepoints$Tree <-
   sapply(timepoints$orig.ident,
          function(x){unlist(strsplit(x, split = "[a-z,A-Z]$"))[1]})
 
-celltype_colors_in <- read.csv("~/Documents/Projects/heart_Bo/Data/Cell_type_colors_2.csv",
+celltype_colors_in <- read.csv("data/hu_zebrafish_linnaeus/Zebrafish_cell_type_colors.csv",
                                stringsAsFactors = F)
 celltype_colors <- setNames(celltype_colors_in$color, celltype_colors_in$Cell.type)
 rm(celltype_colors_in)
@@ -357,7 +356,8 @@ ct_freqs <-
 ct_freqs <- ct_freqs[time %in% c("Ctrl", "3dpi", "7dpi")]
 ct_freqs$time <- factor(ct_freqs$time, levels = c("Ctrl", "3dpi", "7dpi"))
 
-moslin_data_path <- "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9/"
+moslin_data_path <- "~/Documents/Projects/Moscot/Data/tmats_opt_moslin_csv/"
+  # "data/hu_zebrafish_linnaeus/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9/"
 moslin_files <- data.table(Moslin_filename = list.files(path = moslin_data_path))
 moslin_files <- moslin_files[, {
   filename_split <- unlist(strsplit(Moslin_filename, "_|-"))
@@ -378,8 +378,8 @@ moslin_files <-
   }, by = names(moslin_files)]
 
 # Visualize couplings and frequencies ####
-from_tree <- "H5"
-to_tree <- "Hr27"
+from_tree <- "H5" # H5 for 4b, Hr11 for 4d
+to_tree <- "Hr27" #Hr27 for 4b, Hr6 for 4d
 
 edgelist_from <- tree_list_in[[from_tree]]$Edge_list
 edgelist_from <- edgelist_from[edgelist_from$Cell.type != "NA", ]
@@ -415,8 +415,8 @@ row_anno <- pheatmap_anno[rownames(transitions_test), , drop=F]
 col_anno <- pheatmap_anno[colnames(transitions_test), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
-# Fig 4b and part of Figure 5.2
-pheatmap_filename <- paste("./Images/Couplings_pheatmap_", moslin_filename, ".png", sep = "")
+# Fig 4b (H5 to Hr27), 4c (Hr11 to Hr6)
+pheatmap_filename <- paste("figures/hu_zebrafish_linnaeus/Couplings_pheatmap_", moslin_filename, ".png", sep = "")
 # png(pheatmap_filename, width = 450, height = 350)
 pheatmap::pheatmap(log10(transitions_test), fontsize = 24, legend = T, #clustering_method = "ward.D2",
                    cluster_rows = F, cluster_cols = F,
@@ -427,9 +427,24 @@ pheatmap::pheatmap(log10(transitions_test), fontsize = 24, legend = T, #clusteri
                    annotation_colors = ann_colors, annotation_legend = F)
 # dev.off()
 
+# START REMOVE
+# View(unique(transitions.long[Cell_type_to == "Endocardium (Ventricle)", c("To", "Cell_type_to")]))
+# example_to_cell <- "Hr27_AAAGAACTCTAGGCAT"
+# example_transitions <- transitions.long[To == example_to_cell, ]
+# example_transitions <- example_transitions[, Rank := rank(-Probability, ties = "first"), ]
+# ggplot() +
+#   geom_point(data = example_transitions, #[example_transitions$Rank != 1, ],
+#              aes(x = Rank, y = Probability), color = "grey") +
+#   geom_point(data = example_transitions[Rank ==1, ],
+#              aes(x = Rank, y = Probability, color = Cell_type_from)) +
+#   scale_x_reverse() +
+#   scale_color_manual(values = celltype_colors)
+# END REMOVE
+
 mean_transfers <- transitions.long[, .(Transfer_ratio = sum(Probability)), by = c("Cell_type_from", "Cell_type_to")]
 mean_transfers_wide <- dcast(mean_transfers, Cell_type_from ~ Cell_type_to, value.var = "Transfer_ratio")
 mean_transfers_mat <- as.matrix(mean_transfers_wide[, -1])
+mean_transfers_mat[mean_transfers_mat == 0] <- min(mean_transfers_mat[mean_transfers_mat != 0])
 rownames(mean_transfers_mat) <- mean_transfers_wide$Cell_type_from
 
 pheatmap_anno <- data.frame(Cell_type = union(mean_transfers$Cell_type_from, mean_transfers$Cell_type_to))
@@ -438,8 +453,8 @@ row_anno <- pheatmap_anno[rownames(mean_transfers_mat), , drop=F]
 col_anno <- pheatmap_anno[colnames(mean_transfers_mat), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
-# Part of Figure S5.2
-# png(paste("../../../Images/Mean_couplings_pheatmap_", moslin_filename, ".png", sep = ""),
+# Part of Figure S17
+# png(paste("figures/hu_zebrafish_linnaeus/Mean_couplings_pheatmap_", moslin_filename, ".png", sep = ""),
 #     width = 450, height = 350)
 pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T, 
                    cluster_rows = F, cluster_cols = F,
@@ -450,8 +465,8 @@ pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T,
                    annotation_colors = ann_colors, annotation_legend = F)
 # dev.off()
 
-# Part of Figure S5.2
-# png("./Images/Ct_freqs_H5_Hr27.png",
+# Part of Figure S17
+# png("figures/hu_zebrafish_linnaeus/Ct_freqs_H5_Hr27.png",
 #     width = 350, height = 350)
 ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
   geom_bar(aes(x = Tree, y = Rel_freq, fill = Cell.type), stat = "identity", width = 0.6) +
@@ -466,9 +481,11 @@ ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
         panel.background = element_blank())
 # dev.off()
 
-transfer_ratios_trees <- 
-  fread("../../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
-  
+# NB This file needs to be created first in the section 
+# "Path towards transient fibroblasts"
+transfer_ratios_trees <-
+  fread("../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0.0_taua-0.4")
+
 ct_and_transfer_averages <- AverageFrequenciesAndTransferRatios(transfer_ratios = transfer_ratios_trees,
                                                                 tree_times = unique(ct_freqs[, c("Tree", "time")]))
 
@@ -487,8 +504,8 @@ row_anno <- pheatmap_anno[rownames(transfer_av_ctrl_3dpi_mat), , drop=F]
 col_anno <- pheatmap_anno[colnames(transfer_av_ctrl_3dpi_mat), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
-# Part of Figure S5.2
-# png("../../../Images/Moscot_mean_couplings_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
+# Part of Figure S17
+# png("figures/hu_zebrafish_linnaeus/Moscot_mean_couplings_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
 #     width = 450, height = 350)
 pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 24, legend = T, 
                    cluster_rows = F, cluster_cols = F,
@@ -501,8 +518,8 @@ pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 24, legend = T,
 
 ct_freqs_ctrl_3dpi <- ct_and_transfer_averages$Cell_type_frequencies[time %in% c("Ctrl", "3dpi")]
 
-# Part of Figure S5.2
-# png("./Images/Ct_freqs_ctrl_3dpi.png",
+# Part of Figure S17
+# png("figures/hu_zebrafish_linnaeus/Ct_freqs_ctrl_3dpi.png",
 #     width = 350, height = 350)
 ggplot(ct_freqs_ctrl_3dpi) +
   geom_bar(aes(x = time, y = Rel_freq, fill = Cell_type), stat = "identity", width = 0.6) +
@@ -517,17 +534,40 @@ ggplot(ct_freqs_ctrl_3dpi) +
         panel.background = element_blank())
 # dev.off()
 
+# REMOVE AFTER INITIAL COMMIT
+# Correspondence between cell type growth and cell marginals -
+# not used in paper but interesting nonetheless
+input_growth <- fread("../../Data/growth_rates_averages.csv")
+
+t1_marginals <- transitions.long[, .(t1_marginal = sum(Probability)), by = list(From, Cell_type_from)]
+t1_mean_marginals <- t1_marginals[, .(Mean_marginal = mean(t1_marginal)), by = list(Cell_type_from)]
+to_freqs <- ct_freqs[Tree == to_tree, ]
+names(to_freqs)[4] <- "Rel_freq_t2"
+from_freqs <- ct_freqs[Tree == from_tree, ]
+names(from_freqs)[4] <- "Rel_freq_t1"
+t1_mean_marginals <- merge(t1_mean_marginals, to_freqs[, c("Cell.type", "Rel_freq_t2")],
+                           by.x = "Cell_type_from", by.y = "Cell.type")
+t1_mean_marginals <- merge(t1_mean_marginals, from_freqs[, c("Cell.type", "Rel_freq_t1")],
+                           by.x = "Cell_type_from", by.y = "Cell.type")
+t1_mean_marginals$Cell_type_expansion <- t1_mean_marginals$Rel_freq_t2/t1_mean_marginals$Rel_freq_t1
+ggplot(t1_mean_marginals) +
+  geom_point(aes(x = Cell_type_expansion, y = Mean_marginal)) +
+  labs(x = "Cell type expansion (t2/t1)", y = "Mean outgoing mass (t1)")
+# ggsave("./figures/hu_zebrafish_linnaeus/H5_Hr27_marginals_expansion.png",
+#        width = 4, height = 4)
+t1_mean_marginals <- merge(t1_mean_marginals, input_growth,
+                           by.x = "Cell_type_from", by.y = "Cell_type")
+ggplot(t1_mean_marginals) +
+  geom_point(aes(x = cell_growth_rate, y = Mean_marginal)) +
+  labs(x = "Gene-inferred growth rate (t1)", y = "Mean outgoing mass (t1)")
+# ggsave("./figures/hu_zebrafish_linnaeus/H5_Hr27_marginals_growth_rate.png",
+#        width = 4, height = 4)
+# END REMOVE
+
+# START REMOVE - DONE IN PYTHON
 # Cell type-cell type persistency test ####
-data_paths <- c("/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.6_epsilon-0.01_beta-0.2_taua-0.9/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.005_beta-0.2_taua-0.9/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.4_epsilon-0.01_beta-0.2_taua-0.9/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.1_taua-0.9/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.3_taua-0.9/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.95/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.85/",
-                "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.1_beta-0.2_taua-0.9/"
-                )
+data_paths <- c("/Volumes/Data 1/Current Project Data/Moscot/Hyperparameter sweep/tmats_unbalanced_alpha-0.0_epsilon-0.001_beta-0.2_taua-0.8/",
+                "/Volumes/Data 1/Current Project Data/Moscot/Hyperparameter sweep/tmats_unbalanced_alpha-0.1_epsilon-0.001_beta-0.2_taua-0.8/")
 rm(files_dt)
 for(i in 1:length(data_paths)){
   if(exists("files_dt")){
@@ -603,7 +643,7 @@ for(i in 1:nrow(files_dt)){
     row_anno <- pheatmap_anno[rownames(coupling_mat), , drop=F]
     col_anno <- pheatmap_anno[colnames(coupling_mat), , drop=F]
     ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
-    # png(paste("./Images/Moscot_couplings_", dataset_t1, "_", dataset_t2, "_", this_run, ".png", sep = ""),
+    # png(paste("figures/hu_zebrafish_linnaeus/Moslin_couplings_", dataset_t1, "_", dataset_t2, "_", this_run, ".png", sep = ""),
     #      width = 1.6, height = 1.2, res = 900, units = "in", type = "cairo")
     pheatmap::pheatmap(log10(coupling_mat), fontsize = 8, legend = T, #clustering_method = "ward.D2",
                        cluster_rows = F, cluster_cols = F,
@@ -640,7 +680,7 @@ for(i in 1:nrow(files_dt)){
             legend.key=element_blank(),
             panel.spacing = unit(1, "lines"),
             plot.margin = unit(c(0.2, 0.5, 0, 0.5), "lines"))
-    # ggsave(paste("./Images/Moscot_noiter_EndoA_Macroph_distribution_H5_Hr27_", this_run, ".png", sep = ""),
+    # ggsave(paste("figures/hu_zebrafish_linnaeus/Moscot_noiter_EndoA_Macroph_distribution_H5_Hr27_", this_run, ".png", sep = ""),
     #         width = 1.4, height = 0.8, units = "in", device = png, dpi = 900, type = "cairo")
   }
   
@@ -762,11 +802,11 @@ for(i in 1:nrow(files_dt)){
 
 # Save results
 # for(run_name in names(ct_persistency_results)){
-#   write_file_path <- paste("../../../Data/CT_welch_for_ROC", run_name, sep = "_")
+  # write_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC", run_name, sep = "_")
 #   fwrite(ct_persistency_results[[run_name]], file = write_file_path)
 # }
 # for(run_name in names(ct_persistency_results_ovr)){
-#   write_file_path <- paste("../../../Data/CT_welch_for_ROC_OvR", run_name, sep = "_")
+#   write_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC_OvR", run_name, sep = "_")
 #   fwrite(ct_persistency_results_ovr[[run_name]], file = write_file_path)
 # }
 
@@ -774,12 +814,11 @@ for(i in 1:nrow(files_dt)){
 if(F){
   files_dt <- files_dt[complete.cases(files_dt), ]
   weighted.mean(x = files_dt$F1_score, w = files_dt$F1_support)
-  # 0.67.
 }
 
 # AUROCs for OvR analysis
 moslin_path_name <- "tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9"
-read_file_path <- paste("../../../Data/CT_welch_for_ROC_OvR", moslin_path_name, sep = "_")
+read_file_path <- paste("data/hu_zebrafish_linnaeus/CT_welch_for_ROC_OvR", moslin_path_name, sep = "_")
 ROC_OvR_df <- fread(read_file_path)
 ROC_OvR_df$Expected_out <- c(0,1)[as.integer(ROC_OvR_df$Cell_type_from != "Same") + 1]
 ROC_OvR_df$time <-
@@ -814,13 +853,18 @@ Welch_ROC_OvR_plot +
         legend.key=element_blank(),
         panel.spacing = unit(1, "lines"),
         plot.margin = unit(c(0, 0.5, 0, 0.5), "lines"))
-ggsave(paste("../../../Images/Welch_ROC_OvR_", moslin_path_name, ".png", sep = ""),
+ggsave(paste("figures//Welch_ROC_OvR_", moslin_path_name, ".png", sep = ""),
        width = 3, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
 
 # AUROCs for OvO analysis
 moslin_path_name <- "tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9"
-read_file_path <- paste("../../../Data/CT_welch_for_ROC", moslin_path_name, sep = "_")
+read_file_path <- paste("../../Data/CT_welch_for_ROC", moslin_path_name, sep = "_")
 top_freq_types_full <- fread(read_file_path)
+# To test persistency, only compare cell types that are present at
+# both timepoints. To do this:
+# select, per time point, the cell types that are shared between t1
+# and t2 datasets. The cell types do not necessarily need to be present
+# in ALL t1 or t2 datasets; their absence is a signal in itself.
 ROC_df <- 
   top_freq_types_full[top_freq_types_full[, 
                                           .I[which(Cell_type_to %in% intersect(Cell_type_from, Cell_type_to) &
@@ -1046,10 +1090,11 @@ ggplot(AUC_sample) +
 # ggsave(paste("./Images/Subsampled_", t2, "_Welch_AUC_distribution_", moslin_path_name, ".png", sep = ""),
 # End inset figure 4c
 
+# END REMOVE
+
 # Path towards transient fibroblasts ####
 freq_cutoff <- 10
-moslin_data_path <- 
-  "/Volumes/Data 1/Current Project Data/Moscot/tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9/"
+moslin_data_path <- "~/Documents/Projects/Moscot/Data/tmats_opt_moslin_csv/"
 moslin_files <- data.table(Moslin_filename = list.files(path = moslin_data_path))
 moslin_files <- moslin_files[, {
   filename_split <- unlist(strsplit(Moslin_filename, "_|-"))
@@ -1130,9 +1175,9 @@ for(i in 1:nrow(moslin_files)){
   }
 }
 transfer_ratios_trees <- transfer_ratios
-# fwrite(transfer_ratios, "./Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+# fwrite(transfer_ratios, "../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0.0_taua-0.4")
 transfer_ratios_trees <-
-  fread("../../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+  fread("../../Data/All_celltype_transfer_ratios_with_background_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0.0_taua-0.4")
 
 ct_and_transfer_averages <- AverageFrequenciesAndTransferRatios(transfer_ratios = transfer_ratios_trees,
                                                      tree_times = tree_time)
@@ -1158,6 +1203,59 @@ transfer_averages_percentages$Perc_from <- 100 * transfer_averages_percentages$T
 transfer_averages_percentages$Perc_from[is.na(transfer_averages_percentages$Perc_from)] <- 0
 transfer_averages_percentages$Perc_to <- 100 * transfer_averages_percentages$Transfer_ratio/transfer_averages_percentages$Full_to
 transfer_averages_percentages$Perc_to[is.na(transfer_averages_percentages$Perc_to)] <- 0
+# fwrite(transfer_averages_percentages, "../../Data/All_celltype_transfer_average_percentages_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.1_taua-0.9")
+# fwrite(transfer_averages_percentages, "../../Data/All_celltype_transfer_average_percentages_with_background_tmats_moslin_alpha-0.0_epsilon-0.01_beta-0.2_taua-0.9")
+# fwrite(transfer_averages_percentages, "../../Data/All_celltype_transfer_average_percentages_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+
+# Plot percentages transferred to col12 cells (3dpi) and nppc cells (7dpi)
+# Done in python script.
+# whitelist_col12_origin <- c("Epicardium (Ventricle)", "Epicardium (Atrium)", "Fibroblasts (const.)", "Fibroblasts (cfd)", "Fibroblasts (cxcl12a)", "Fibroblasts (proliferating)")
+# whitelist_nppc_origin <- c("Endocardium (Ventricle)", "Endocardium (Atrium)", "Fibroblasts (spock3)")
+# top_moslin_low_b <- fread("../../Data/All_celltype_transfer_average_percentages_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.1_taua-0.9")
+# tap_moslin <- fread("../../Data/All_celltype_transfer_average_percentages_with_background_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+# tap_wot <- fread("../../Data/All_celltype_transfer_average_percentages_with_background_tmats_moslin_alpha-0.0_epsilon-0.01_beta-0.2_taua-0.9")
+# 
+# col12_test_moslin <- tap_moslin[t2_time == "3dpi" & Cell_type_to == "Fibroblasts (col12a1a)", ]
+# col12_test_moslin$Origin_whitelist <- col12_test_moslin$Cell_type_from %in% whitelist_col12_origin
+# col12_moslin_percentages <- col12_test_moslin[, .(Perc_origin = sum(Perc_to)), by = "Origin_whitelist"]
+# col12_moslin_percentages$Method <- "Moslin"
+# col12_moslin_percentages$Cell_type <- "Fibroblasts (col12a1a)"
+# nppc_test_moslin <- tap_moslin[t2_time == "7dpi" & Cell_type_to == "Fibroblasts (nppc)", ]
+# nppc_test_moslin$Origin_whitelist <- nppc_test_moslin$Cell_type_from %in% whitelist_nppc_origin
+# nppc_moslin_percentages <- nppc_test_moslin[, .(Perc_origin = sum(Perc_to)), by = "Origin_whitelist"]
+# nppc_moslin_percentages$Method <- "Moslin"
+# nppc_moslin_percentages$Cell_type <- "Fibroblasts (nppc)"
+# 
+# col12_test_moslin_lb <- top_moslin_low_b[t2_time == "3dpi" & Cell_type_to == "Fibroblasts (col12a1a)", ]
+# col12_test_moslin_lb$Origin_whitelist <- col12_test_moslin_lb$Cell_type_from %in% whitelist_col12_origin
+# col12_moslin_lb_percentages <- col12_test_moslin_lb[, .(Perc_origin = sum(Perc_to)), by = "Origin_whitelist"]
+# col12_moslin_lb_percentages$Method <- "Low b"
+# col12_moslin_lb_percentages$Cell_type <- "Fibroblasts (col12a1a)"
+# nppc_test_moslin_lb <- top_moslin_low_b[t2_time == "7dpi" & Cell_type_to == "Fibroblasts (nppc)", ]
+# nppc_test_moslin_lb$Origin_whitelist <- nppc_test_moslin_lb$Cell_type_from %in% whitelist_nppc_origin
+# nppc_moslin_lb_percentages <- nppc_test_moslin_lb[, .(Perc_origin = sum(Perc_to)), by = "Origin_whitelist"]
+# nppc_moslin_lb_percentages$Method <- "Low b"
+# nppc_moslin_lb_percentages$Cell_type <- "Fibroblasts (nppc)"
+# 
+# col12_test_wot <- tap_wot[t2_time == "3dpi" & Cell_type_to == "Fibroblasts (col12a1a)", ]
+# col12_test_wot$Origin_whitelist <- col12_test_wot$Cell_type_from %in% whitelist_col12_origin
+# col12_wot_percentages <- col12_test_wot[, .(Perc_origin = sum(Perc_to)), by = "Origin_whitelist"]
+# col12_wot_percentages$Method <- "WOT"
+# col12_wot_percentages$Cell_type <- "Fibroblasts (col12a1a)"
+# nppc_test_wot <- tap_wot[t2_time == "7dpi" & Cell_type_to == "Fibroblasts (nppc)", ]
+# nppc_test_wot$Origin_whitelist <- nppc_test_wot$Cell_type_from %in% whitelist_nppc_origin
+# nppc_wot_percentages <- nppc_test_wot[, .(Perc_origin = sum(Perc_to)), by = "Origin_whitelist"]
+# nppc_wot_percentages$Method <- "WOT"
+# nppc_wot_percentages$Cell_type <- "Fibroblasts (nppc)"
+# 
+# transient_test_outcomes <- rbind(col12_moslin_percentages, nppc_moslin_percentages, col12_wot_percentages, nppc_wot_percentages,
+#                                  col12_moslin_lb_percentages, nppc_moslin_lb_percentages)
+# ggplot(transient_test_outcomes[Origin_whitelist == TRUE, ]) +
+#   geom_bar(aes(x = Method, y = Perc_origin), stat = "identity") +
+#   facet_wrap(~Cell_type, nrow = 1) +
+#   labs(y = "Percentage correct origin")
+# ggsave("../../Images/Transient_test_moslin_wot.png",
+#        height = 4, width = 4)
 
 # Identify largest percentages to and from that are not same celltype
 cross_transfer_percentages <- 
@@ -1170,7 +1268,7 @@ t1t2t3_alluvia_plot <-
   CreateAlluvialPlotDT(alluvia_dt = t1t2t3_alluvia,
                        ct_averages = ct_averages,
                        fraction_threshold = 0.001)
-# Figure 4d
+# Figure 4f
 ggplot(t1t2t3_alluvia_plot,
        aes(x = Time, stratum = Cell_type, alluvium = Alluvium,
            y = Fraction,
@@ -1187,7 +1285,7 @@ ggplot(t1t2t3_alluvia_plot,
         axis.title.x = element_blank(),
         axis.text = element_text(size = 6),
         panel.background = element_blank())
-# ggsave("./Images/Alluvium_article_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
+# ggsave("../../Images/Alluvium_article_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0_taua-0.4.png",
 # width = 3.5, height = 1.8, units = "in", device = png, dpi = 900, type = "cairo")
 
 # Rules for zooming in:
@@ -1221,7 +1319,7 @@ t1t2t3_alluvia_zoom_plot$Show_alluvium <-
           unlist(strsplit(as.character(x[1]), "_"))[as.integer(x[2])] %in% ct_of_interest
           }})
 t1t2t3_alluvia_zoom_plot$Plot_alpha[!t1t2t3_alluvia_zoom_plot$Show_alluvium] <- 0
-# Plot 4e
+# Plot 4g
 ggplot(t1t2t3_alluvia_zoom_plot,
        aes(x = Time, stratum = Cell_type, alluvium = Alluvium,
            y = Fraction,
@@ -1238,7 +1336,7 @@ ggplot(t1t2t3_alluvia_zoom_plot,
         axis.title.x = element_blank(),
         axis.text = element_text(size = 6),
         panel.background = element_blank())
-# ggsave("./Images/Alluvium_article_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9_col1112const_fixed_t3.png",
+# ggsave("../../Images/Alluvium_article_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0_taua-0.4_col1112const_fixed_t3.png",
 #        width = 2.7, height = 1.4, units = "in", device = png, dpi = 900, type = "cairo")
 
 # Bootstrap for percentage confidence intervals
@@ -1308,7 +1406,7 @@ for(i in 1:nrow(x)){
 # Calculate confidence intervals
 
 # fwrite(bootstrapped_average_percentages,
-#        "./Data/Bootstrapped_average_percentages_3-6-5_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9")
+       # "./Data/Bootstrapped_average_percentages_3-6-5_tmats_moslin_alpha-0.01_epsilon-0.05_beta-0_taua-0.4")
 # bootstrapped_average_percentages <-
 #   fread("./Data/Bootstrapped_average_percentages_3-6-5_unbalanced_alpha-0.5_epsilon-0.001_beta-0.2_taua-0.8")
 
