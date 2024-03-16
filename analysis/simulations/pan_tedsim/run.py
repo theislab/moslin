@@ -74,7 +74,7 @@ def benchmark(
         "late_cost": np.nan,
     }
     if seed is None:
-        seed = int(abs(hash(f"pa{p_a}_ss{ss}") % (2**32)))
+        seed = int(abs(hash(f"pa{p_a}_ss{ss}") % (2 ** 32)))
     np.random.seed(seed)
 
     true_trees, rna_arrays, barcode_arrays = utils_run.prepare_data(
