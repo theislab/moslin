@@ -68,9 +68,11 @@ Additionally, we simulated data using `LineageOT`_ and `TedSim`_. Processed data
 is available on `figshare`_. To ease reproducibility, our data examples can
 also be accessed through moscot's `dataset interface <https://moscot.readthedocs.io/en/latest/user.html#module-moscot.datasets>`_.
 
+Utility functions required for the C. elegans analysis are available in the `moslin_utils` mini-package in this repo.
+
 Reproducibility
 ---------------
-To ease reproducibility of our preprint results, we've organized this repository along the categories below. Each folder contains
+To ease reproducibility of our results, we've organized this repository along the categories below. Each folder contains
 notebooks and scripts necessary to reproduce the corresponding analysis. We read data from `data <data/>`_
 and write figures to `figures <figures/>`_. Please open an `issue <https://github.com/theislab/moslin/issues/new>`_ should you experience
 difficulties reproducing any result.
