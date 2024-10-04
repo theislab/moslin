@@ -13,15 +13,17 @@ File description
     :header: "File/Folder", "What it does"
     :delim: |
 
-    ``run_gridsearch`` | Benchmark moslin, pure Gromow-Wasserstein, pure OT and `LineageOT`_ across a grid of hyperparameters using `wandb`_. The gridsearch parameters are specified in ``moslin.yml`` and ``lot.yml`` for moslin and LineageOT, respectively. Utilities for the benchmark can be found in ``utils.py``.
-    ``ML_2024-03-11_explore_c_elegans.ipynb`` | Visualize the two data subsets employed in the manuscript: all cells with precise lineage information and the ABpxp lineage.
-    ``ML_2024-03-11_prepare_data.ipynb`` | Clean up provided metadata, add TF annotations, aggregate clusters and assign custom colors.
-    ``ML_2023-03-11_celegans_bar.ipynb`` | Visualize the benchmark results in terms of the mean error.
+    ``run_gridsearch`` | Benchmark moslin, pure Gromow-Wasserstein, pure OT and `LineageOT`_ across a grid of hyperparameters using `wandb`_. The gridsearch parameters are specified in ``moslin.yml`` and ``lot.yml`` for moslin and LineageOT, respectively. 
+    ``ML_2024-06-05_prepare_c_elegans.ipynb`` | Clean up provided metadata, add TF annotations, aggregate clusters and assign custom colors.
+    ``ML_2024-06-08_explore_c_elegans.ipynb`` | Visualize the two data subsets employed in the manuscript: all cells with precise lineage information and the ABpxp lineage.
+    ``ML_2024-06-04_visualize_gridsearch_results.ipynb`` | Visualize the benchmark results in terms of the mean error.
     ``ML_2024-03-12_GW_performance.ipynb`` | Show that pure GW performs better on precise lineage information when initialized with the OT solution. 
+    ``ML_2024-07-08_cost_matrix_permutations.ipynb`` | Demonstrate the effect of perturbing cost matrix elements. 
     ``ML_2024-03-11_compute_couplings.ipynb`` | Compute couplings using hyperparmeters identified in the gridsearch. 
     ``ML_2024-03-12_palantir.ipynb`` | Run `Palantir`_ and `MAGIC`_ to obtain a pseudotime and imputed gene expression, respectively. Imputed data is only used to visualize gene expression trends.
     ``ML_2024-03-12_zoom_in_abpxp.ipynb`` | Zoom-in onto one pair of time points and explore method differences.
-    ``ML_2024-03-12_cellrank2_{METHOD}.ipynb`` | Compare cellular trajectories by combining CellRank 2 with different methods (`METHOD` in {ot, gw, moslin, LineageOT, palantir, cytotrace})
+    ``ML_{DATE}_cellrank2_{METHOD}.ipynb`` | Compare cellular trajectories by combining CellRank 2 with different methods (`METHOD` in {ot, gw, moslin, LineageOT, palantir, cytotrace})
+    ``ML_2024-06-29_terminal_state_robustness.ipynb`` | Investigate robustness when changing the number of terminal states.  
 
 .. _figshare: https://doi.org/10.6084/m9.figshare.c.6533377.v1
 .. _wandb: https://wandb.ai
