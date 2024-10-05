@@ -63,20 +63,20 @@ def calculate_transient_percentages(transitions, whitelist_col12_origin = whitel
 sns.set_palette('colorblind')
 
 
-# In[6]:
+# In[8]:
 
 
 # Celltype colors
-celltype_colors = pd.read_csv('../Publication_repo/moslin/data/hu_zebrafish_linnaeus/Zebrafish_cell_type_colors.csv')
+celltype_colors = pd.read_csv('../../data/hu_zebrafish_linnaeus/Zebrafish_cell_type_colors.csv')
 
 
-# In[7]:
+# In[9]:
 
 
 ct_lut = dict(zip(map(str, celltype_colors['Cell.type']), celltype_colors['color']))
 
 
-# In[8]:
+# In[10]:
 
 
 files_dt = pd.DataFrame()
@@ -91,7 +91,7 @@ files_dt = files_dt[[not not x for x in files_dt['Filename_array']]]
 files_dt['Filename'] = files_dt.apply(lambda x: (x['Filename_array'])[0], axis = 1)
 
 
-# In[10]:
+# In[11]:
 
 
 files_dt['Method'] = "foo"
@@ -132,7 +132,7 @@ for i in files_dt.index:
     files_dt.loc[i, 'accuracy'] = this_accuracy
 
 
-# In[11]:
+# In[12]:
 
 
 files_dt['Convergence'] = [float((re.split('_|\.csv', x))[3]) for x in files_dt['Filename']]
@@ -140,10 +140,10 @@ files_dt_all = files_dt
 files_dt = files_dt[(files_dt['Convergence'] >= 0.7) & (files_dt['alpha'] != 0.05)]
 
 
-# In[15]:
+# In[18]:
 
 
-# Part of Supp. Fig. 15
+# Part of Supp. Fig. 18
 df_pivot = files_dt[(files_dt['taub'] == 1) & (files_dt['Method'] == 'moslin') & (files_dt['beta'] == 0) & (files_dt['taua'] == 0.4)].pivot_table(index='alpha', 
                           columns='epsilon', 
                           values='accuracy', 
@@ -151,15 +151,17 @@ df_pivot = files_dt[(files_dt['taub'] == 1) & (files_dt['Method'] == 'moslin') &
 plt.rcParams.update({'font.size': 12})
 g = sns.heatmap(df_pivot, annot=True, cmap='coolwarm', vmin = 0.4, vmax = 0.8)
 g.set_facecolor('grey')
+plt.xlabel('$\\epsilon$')
+plt.ylabel('$\\alpha$')
 plt.title('Accuracy')
-#plt.savefig('../Images/Grid_search_epsilon_alpha.png', bbox_inches='tight')
+#plt.savefig('../../figures/hu_zebrafish_linnaeus/Grid_search_epsilon_alpha.png', bbox_inches = 'tight')
 plt.rcParams.update({'font.size': 22})
 
 
-# In[16]:
+# In[20]:
 
 
-# Part of Supp. Fig. 15
+# Part of Supp. Fig. 18
 df_pivot = files_dt[(files_dt['taub'] == 1) & (files_dt['Method'] == 'moslin') & (files_dt['beta'] == 0) & (files_dt['alpha'] == 0.01)].pivot_table(index='taua', 
                           columns='epsilon', 
                           values='accuracy', 
@@ -169,9 +171,11 @@ plt.rcParams.update({'font.size': 12})
 
 g = sns.heatmap(df_pivot, annot=True, cmap='coolwarm', vmin = 0.4, vmax = 0.8)
 g.set_facecolor('grey')
+plt.xlabel('$\\epsilon$')
+plt.ylabel('$\\tau_a$')
 plt.title('Accuracy')
 
-#plt.savefig('../Images/Grid_search_epsilon_taua.png', bbox_inches='tight')
+#plt.savefig('../../figures/hu_zebrafish_linnaeus/Grid_search_epsilon_taua.png', bbox_inches='tight')
 plt.rcParams.update({'font.size': 22})
 
 
@@ -286,7 +290,7 @@ cm_colors = pd.Series(all_labels).map(ct_lut)
 # In[28]:
 
 
-# Part of Supp. Fig. 14c
+# Part of Supp. Fig. 17c
 g = sns.clustermap(persistence_precision, row_cluster = False, col_cluster = False,
               row_colors = cm_colors.to_numpy(), col_colors = cm_colors.to_numpy(),
                   cbar_pos=(1.02, 0.4, 0.05, 0.18), dendrogram_ratio = 0.01)
@@ -306,7 +310,7 @@ plt.show()
 # In[29]:
 
 
-# Part of Supp. Fig. 14c
+# Part of Supp. Fig. 17c
 g = sns.clustermap(persistence_recall, row_cluster = False, col_cluster = False,
               row_colors = cm_colors.to_numpy(), col_colors = cm_colors.to_numpy(),
                   cbar_pos=(1.02, 0.4, 0.05, 0.18), dendrogram_ratio = 0.01)
@@ -403,7 +407,7 @@ err_bar_sizes = np.absolute(acc_sample[['moslin_acc', 'lot_acc', 'ot_acc']].quan
 # In[47]:
 
 
-# Supp. Fig. S14b
+# Supp. Fig. S17b
 categories = optimal_hyperparameters_and_perf['algorithm']
 summary_statistics = optimal_hyperparameters_and_perf['accuracy']
 standard_errors = err_bar_sizes
@@ -473,7 +477,7 @@ sewm_ot_95 = 2 * stats.tstd(a = ot_combination_accuracies['Accuracy']) * sum(np.
 # In[56]:
 
 
-# Supp. Fig. S14a
+# Supp. Fig. S17a
 err_bar_sizes = np.array(([sewm_moslin_95, sewm_lot_95, sewm_ot_95], [sewm_moslin_95, sewm_lot_95, sewm_ot_95]))
 
 categories = optimal_hyperparameters_and_perf['algorithm']
@@ -506,7 +510,7 @@ optimal_hyperparameters_and_perf_melt.replace(to_replace = {'col12' : 'col12a1a'
 # In[53]:
 
 
-# Supp. Fig. 16b
+# Supp. Fig. 19b
 ax = sns.barplot(optimal_hyperparameters_and_perf_melt, x = 'Transient_fibroblast', y = 'Percentage_correct', hue = 'algorithm')
 
 # Increase y-axis range
@@ -563,7 +567,7 @@ print(f'Nppc average difference: {nppc_diff:.2f}; p-value: {nppc_t.pvalue:.2E}')
 # In[55]:
 
 
-# Part of Supp. Fig. 16a
+# Part of Supp. Fig. 19a
 # Difference histogram col12
 ax = sns.histplot(col12_comparison, x = 'Diff')
 ax.set_title('Correct col12a1a precursors')
@@ -575,7 +579,7 @@ plt.show()
 # In[59]:
 
 
-# Part of Supp. Fig. 16a
+# Part of Supp. Fig. 19a
 # Difference histogram nppc
 ax = sns.histplot(nppc_comparison, x = 'Diff')
 ax.set_title('Correct nppc precursors')

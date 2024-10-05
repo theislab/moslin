@@ -404,15 +404,17 @@ ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_a
 
 # Fig 4b (H5 to Hr27), 4c (Hr11 to Hr6)
 pheatmap_filename <- paste("figures/hu_zebrafish_linnaeus/Couplings_pheatmap_", moslin_filename, ".png", sep = "")
-# png(pheatmap_filename, width = 450, height = 350)
-pheatmap::pheatmap(log10(transitions_test), fontsize = 24, legend = T, #clustering_method = "ward.D2",
+#png(pheatmap_filename, width = 450, height = 350)
+png(pheatmap_filename, width = 800, height = 600, res = 200)
+pheatmap::pheatmap(log10(transitions_test), fontsize = 12, 
+                   legend = T, #clustering_method = "ward.D2",
                    cluster_rows = F, cluster_cols = F,
                    show_rownames = F, show_colnames = F,
                    annotation_row = row_anno,
                    annotation_col = col_anno,
                    annotation_names_col = F, annotation_names_row = F,
                    annotation_colors = ann_colors, annotation_legend = F)
-# dev.off()
+dev.off()
 
 mean_transfers <- transitions.long[, .(Transfer_ratio = sum(Probability)), by = c("Cell_type_from", "Cell_type_to")]
 mean_transfers_wide <- dcast(mean_transfers, Cell_type_from ~ Cell_type_to, value.var = "Transfer_ratio")
@@ -426,10 +428,12 @@ row_anno <- pheatmap_anno[rownames(mean_transfers_mat), , drop=F]
 col_anno <- pheatmap_anno[colnames(mean_transfers_mat), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
-# Part of Figure S17
+# Part of Figure S20
 # png(paste("figures/hu_zebrafish_linnaeus/Mean_couplings_pheatmap_", moslin_filename, ".png", sep = ""),
 #     width = 450, height = 350)
-pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T, 
+# png(paste("figures/hu_zebrafish_linnaeus/Mean_couplings_pheatmap_", moslin_filename, ".png", sep = ""),
+#     width = 800, height = 600, res = 200)
+pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 12, legend = T, 
                    cluster_rows = F, cluster_cols = F,
                    show_rownames = F, show_colnames = F,
                    annotation_row = row_anno,
@@ -438,7 +442,7 @@ pheatmap::pheatmap(log10(mean_transfers_mat), fontsize = 24, legend = T,
                    annotation_colors = ann_colors, annotation_legend = F)
 # dev.off()
 
-# Part of Figure S17
+# Part of Figure S20
 # png("figures/hu_zebrafish_linnaeus/Ct_freqs_H5_Hr27.png",
 #     width = 350, height = 350)
 ggplot(ct_freqs[Tree %in% c("H5", "Hr27")]) +
@@ -477,21 +481,23 @@ row_anno <- pheatmap_anno[rownames(transfer_av_ctrl_3dpi_mat), , drop=F]
 col_anno <- pheatmap_anno[colnames(transfer_av_ctrl_3dpi_mat), , drop=F]
 ann_colors = list(Cell_type = celltype_colors[unique(c(col_anno$Cell_type, row_anno$Cell_type))])
 
-# Part of Figure S17
+# Part of Figure S20
 # png("figures/hu_zebrafish_linnaeus/Moscot_mean_couplings_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
 #     width = 450, height = 350)
-pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 24, legend = T, 
+png("figures/hu_zebrafish_linnaeus/Moscot_mean_couplings_tmats_moslin_alpha-0.5_epsilon-0.01_beta-0.2_taua-0.9.png",
+    width = 800, height = 600, res = 200)
+pheatmap::pheatmap(log10(transfer_av_ctrl_3dpi_mat), fontsize = 12, legend = T, 
                    cluster_rows = F, cluster_cols = F,
                    show_rownames = F, show_colnames = F,
                    annotation_row = row_anno,
                    annotation_col = col_anno,
                    annotation_names_col = F, annotation_names_row = F,
                    annotation_colors = ann_colors, annotation_legend = F)
-# dev.off()
+dev.off()
 
 ct_freqs_ctrl_3dpi <- ct_and_transfer_averages$Cell_type_frequencies[time %in% c("Ctrl", "3dpi")]
 
-# Part of Figure S17
+# Part of Figure S20
 # png("figures/hu_zebrafish_linnaeus/Ct_freqs_ctrl_3dpi.png",
 #     width = 350, height = 350)
 ggplot(ct_freqs_ctrl_3dpi) +
@@ -506,6 +512,17 @@ ggplot(ct_freqs_ctrl_3dpi) +
         axis.text = element_text(size = 18),
         panel.background = element_blank())
 # dev.off()
+
+ggplot(ct_freqs) +
+  geom_point(aes(x = time, y = Freq, fill = Cell.type), shape = 21,
+             size = 1) +
+  facet_wrap(~Cell.type, scales = "free_y",
+             labeller = label_wrap_gen(width = 16)) +
+  labs(x = "", y = "Cells") +
+  scale_fill_manual(values = celltype_colors, guide = "none") +
+  theme(strip.text = element_text(size = 7))
+# ggsave("../../Images/Zebrafish_cell_type_frequencies.png",
+#        height = 5, width = 7.5)
 
 # Path towards transient fibroblasts ####
 freq_cutoff <- 10
