@@ -76,7 +76,7 @@ def stochastic_silencing(
     return barcodes_ss
 
 
-def run_cospar(adata, info, barcode_arrays, sample_times, couplings, seed, data_path = None):
+def run_cospar(adata, info, barcode_arrays, sample_times, couplings, seed, data_path=None):
     if data_path:
         cs.settings.data_path = f"data_{seed}_{data_path}"
     else:
@@ -146,7 +146,7 @@ def run_moslin(
         rna_dist: np.ndarray,
         epsilon: float,
         alpha: float,
-    scale_cost:str
+        scale_cost: str
 ):
     # Compute cost matrices for `cost_matrices_key`
 
@@ -309,6 +309,7 @@ def compute_dists(
         barcode_arrays: Mapping[Literal["early", "late"], np.ndarray],
         dist_cache: Optional[Path] = None,
         scale: bool = False,
+        remove_late_cells: Optional[List] = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute distances for time_1, time_2 and joint.
@@ -323,6 +324,7 @@ def compute_dists(
     tree_type: the type of distance to evaluate.
     dist_cache: Path to a cache file where to read/write the distance matrices.
     scale: Whether to scale the cost by maximum.
+    remove_late_cells: remove a subset of late cells
 
     Returns
     -------
@@ -342,6 +344,9 @@ def compute_dists(
     if tree_type == "gt":
         edist = lot_inf.compute_tree_distances(trees["early"])
         ldist = lot_inf.compute_tree_distances(trees["late"])
+        if remove_late_cells is not None:
+            ldist = np.delete(ldist, remove_late_cells, axis=0)
+            ldist = np.delete(ldist, remove_late_cells, axis=1)
     elif tree_type == "bc":
         edist = lot_inf.barcode_distances(barcode_arrays["early"])
         ldist = lot_inf.barcode_distances(barcode_arrays["late"])
@@ -566,11 +571,14 @@ def prepare_data(
         pca: bool = True,
         lognorm: bool = True,
         ttp: float = 100.0,
+        subsample: float = 0
 ) -> Tuple[
     Dict[Literal["early", "late"], nx.DiGraph],
     Dict[Literal["early", "late"], np.ndarray],
     Dict[Literal["early", "late"], np.ndarray],
     Dict[Literal["early", "late"], np.ndarray],
+    Dict[Literal["early", "late"], np.ndarray],
+    List
 ]:
     adata = sc.read(fpath)
     tree = adata.uns["tree"]
@@ -591,21 +599,31 @@ def prepare_data(
         lognorm=lognorm,
         ttp=ttp
     )
-    data_arrays = {
-        "late": lot_inf.extract_data_arrays(true_trees["late"]),
-        "early": lot_inf.extract_data_arrays(true_trees["early"]),
-    }
+
+    leaves_early = lot_inf.get_leaves(true_trees["early"], include_root=False)
+    leaves_late = lot_inf.get_leaves(true_trees["late"], include_root=False)
+
+    remove_late_cells = []
+    if subsample > 0:
+        remove_late_cells = np.random.choice(leaves_late, size=int((1-subsample) * len(leaves_late)), replace=False)
+        leaves_late = np.delete(leaves_late, remove_late_cells)
+        rna_arrays["late"] = np.delete(rna_arrays["late"], remove_late_cells, axis=0)
 
     processed_rna_arrays = {
-        "early": data_arrays["early"][0],
-        "late": data_arrays["late"][0],
+        "early": np.array([true_trees["early"].nodes[leaf]["cell"].x for leaf in leaves_early]),
+        "late": np.array([true_trees["late"].nodes[leaf]["cell"].x for leaf in leaves_late]),
     }
     barcode_arrays = {
-        "early": data_arrays["early"][1],
-        "late": data_arrays["late"][1],
+        "early": np.array([true_trees["early"].nodes[leaf]["cell"].barcode for leaf in leaves_early]),
+        "late": np.array([true_trees["late"].nodes[leaf]["cell"].barcode for leaf in leaves_late]),
     }
 
-    return true_trees, rna_arrays, processed_rna_arrays, barcode_arrays
+    cluster_arrays = {
+        "early": np.array([true_trees["early"].nodes[leaf]["cluster"] for leaf in leaves_early]),
+        "late": np.array([true_trees["late"].nodes[leaf]["cluster"] for leaf in leaves_late]),
+    }
+
+    return true_trees, rna_arrays, processed_rna_arrays, barcode_arrays, cluster_arrays, remove_late_cells
 
 
 def evaluate_coupling(
@@ -641,9 +659,76 @@ def evaluate_coupling(
     return ecost / gt_ecost, lcost / gt_lcost
 
 
+def evaluate_cluster_accuracy(
+        pred_coupling: Union[np.ndarray, jnp.ndarray],
+        couplings: Dict,
+        cluster_arrays: Dict,
+        result_dict: Dict,
+        kind: str
+) -> List:
+    pred_coupling = np.asarray(pred_coupling)
+    gt_coupling = np.asarray(couplings["true"])
+
+    amax = pred_coupling.argmax(axis=0)
+    gt_amax = gt_coupling.argmax(axis=0)
+
+    cluster_acc = []
+    for cluster in np.unique(cluster_arrays["late"]):
+        cluster_transient = cluster not in np.unique(cluster_arrays["early"])
+        cells = np.where(cluster_arrays["late"] == cluster)[0]
+        diff = np.abs(gt_amax[cells] - amax[cells])
+        non_zero = (diff > 0)
+        cluster_acc.append({
+            "kind": [kind],
+            "alpha": [result_dict["alpha"][0]],
+            "epsilon": [result_dict["epsilon"][0]],
+            "cluster": [cluster],
+            "cluster_transient": [cluster_transient],
+            "non_zero": [non_zero.sum() / len(non_zero)],
+            "diff": [diff.sum() / len(diff)]}
+        )
+        print(f"cluster {cluster}: non_zero={non_zero.sum() / len(non_zero)}, diff={diff.sum() / len(diff)}")
+
+    return cluster_acc
+
+
+def get_true_coupling(early_tree, late_tree, remove_late_cells: Optional[List] = None):
+    """
+    Returns the coupling between leaves of early_tree and their descendants in
+    late_tree. Assumes that early_tree is a truncated version of late_tree
+
+    The marginal over the early cells is uniform; if cells have different
+    numbers of descendants, the marginal over late cells will not be uniform.
+    """
+    num_cells_early = len(lot_inf.get_leaves(early_tree)) - 1
+    num_cells_late = len(lot_inf.get_leaves(late_tree)) - 1
+
+    coupling = np.zeros([num_cells_early, num_cells_late])
+
+    cells_early = lot_inf.get_leaves(early_tree, include_root=False)
+
+    for cell in cells_early:
+        parent = next(early_tree.predecessors(cell))
+        late_tree_cell = None
+        for child in late_tree.successors(parent):
+            if late_tree.nodes[child]['cell'].seed == early_tree.nodes[cell]['cell'].seed:
+                late_tree_cell = child
+                break
+        if late_tree_cell == None:
+            raise ValueError("A leaf in early_tree does not appear in late_tree. Cannot find coupling." +
+                             "\nCheck whether either tree has been modified since truncating.")
+        descendants = lot_inf.get_leaf_descendants(late_tree, late_tree_cell)
+        if remove_late_cells is not None:
+            descendants = [d for d in descendants if d not in remove_late_cells]
+        coupling[cell, descendants] = 1 / (num_cells_early * len(descendants))
+
+    return coupling
+
+
 def ground_truth(
         true_trees: Mapping[Literal["early", "late"], nx.DiGraph],
         rna_arrays: Mapping[Literal["early", "late"], np.ndarray],
+        remove_late_cells: Optional[List] = None,
 ) -> Tuple[
     Dict[Literal["true", "independent"], np.ndarray],
     Dict[Literal["early", "late"], np.ndarray],
@@ -651,8 +736,10 @@ def ground_truth(
     float,
 ]:
     couplings = {
-        "true": lot_inf.get_true_coupling(true_trees["early"], true_trees["late"])
+        "true": get_true_coupling(true_trees["early"], true_trees["late"], remove_late_cells=remove_late_cells)
     }
+    if remove_late_cells is not None:
+        couplings["true"] = np.delete(couplings["true"], remove_late_cells, axis=1)
 
     a = jnp.asarray(couplings["true"].sum(1))
     b = jnp.asarray(couplings["true"].sum(0))
@@ -696,9 +783,15 @@ def fitted_couplings(
     return fitted_coupling
 
 
-def set_adata_cospar(true_trees, rna_arrays, pca_arrays):
-    obs_names_early = [f"early_{leaf}" for leaf in lot_inf.get_leaves(true_trees["early"], include_root=False)]
-    obs_names_late = [f"late_{leaf}" for leaf in lot_inf.get_leaves(true_trees["late"], include_root=False)]
+def set_adata_cospar(true_trees, rna_arrays, pca_arrays, remove_late_cells=None):
+
+    leaves_early = lot_inf.get_leaves(true_trees["early"], include_root=False)
+    leaves_late = lot_inf.get_leaves(true_trees["late"], include_root=False)
+    if remove_late_cells is not None:
+        leaves_late = np.delete(leaves_late, remove_late_cells)
+
+    obs_names_early = [f"early_{leaf}" for leaf in leaves_early]
+    obs_names_late = [f"late_{leaf}" for leaf in leaves_late]
     obs_names = obs_names_early + obs_names_late
 
     X = np.concatenate(list(rna_arrays.values()))
@@ -712,4 +805,3 @@ def set_adata_cospar(true_trees, rna_arrays, pca_arrays):
     adata.obsm["X_pca"] = np.concatenate(list(pca_arrays.values()))
 
     return adata
-
